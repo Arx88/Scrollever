@@ -1,0 +1,35 @@
+import type { Metadata, Viewport } from 'next'
+import { Analytics } from '@vercel/analytics/next'
+import { AuthProvider } from '@/lib/auth-context'
+import { InteractionsProvider } from '@/lib/interactions-context'
+import './globals.css'
+
+export const metadata: Metadata = {
+  title: 'SCROLLEVER - AI Art Gallery',
+  description: 'Discover, explore, and collect the most stunning AI-generated images. Infinite scroll of AI creativity.',
+}
+
+export const viewport: Viewport = {
+  themeColor: '#000000',
+  width: 'device-width',
+  initialScale: 1,
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  return (
+    <html lang="en">
+      <body className="font-sans antialiased">
+        <AuthProvider>
+          <InteractionsProvider>
+            {children}
+          </InteractionsProvider>
+        </AuthProvider>
+        <Analytics />
+      </body>
+    </html>
+  )
+}
