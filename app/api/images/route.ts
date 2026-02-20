@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
+import { readFile } from "node:fs/promises"
+import path from "node:path"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { getFallbackFeed } from "@/lib/fallback-feed"
@@ -9,6 +11,8 @@ const FEED_VALUES = new Set<FeedType>(["recent", "immortal", "hall-of-fame"])
 const DEFAULT_LIMIT = 20
 const MAX_LIMIT = 50
 const SUPABASE_TIMEOUT_MS = 8000
+const PROVISIONAL_ASSET_DIR = path.join(process.cwd(), "public", "provisional")
+const ALLOWED_PROVISIONAL_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp"])
 
 export const runtime = "nodejs"
 
@@ -78,6 +82,40 @@ function fallbackResponse(params: {
     degraded: true,
     reason: params.reason,
   })
+}
+
+async function provisionalAssetResponse(fileName: string) {
+  const safeName = path.basename(fileName).trim()
+  if (!safeName) {
+    return NextResponse.json({ error: "Unknown provisional asset" }, { status: 404 })
+  }
+
+  const extension = path.extname(safeName).toLowerCase()
+  if (!ALLOWED_PROVISIONAL_EXTENSIONS.has(extension)) {
+    return NextResponse.json({ error: "Unknown provisional asset" }, { status: 404 })
+  }
+
+  const absolutePath = path.join(PROVISIONAL_ASSET_DIR, safeName)
+
+  try {
+    const buffer = await readFile(absolutePath)
+    const contentType =
+      extension === ".png"
+        ? "image/png"
+        : extension === ".webp"
+          ? "image/webp"
+          : "image/jpeg"
+
+    return new NextResponse(new Uint8Array(buffer), {
+      status: 200,
+      headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=300",
+      },
+    })
+  } catch {
+    return NextResponse.json({ error: "Provisional asset not found" }, { status: 404 })
+  }
 }
 
 async function loadFeedFromSupabase(params: {
@@ -173,6 +211,11 @@ async function loadFeedFromSupabase(params: {
 }
 
 export async function GET(request: NextRequest) {
+  const provisionalAsset = request.nextUrl.searchParams.get("provisional_asset")
+  if (provisionalAsset) {
+    return provisionalAssetResponse(provisionalAsset)
+  }
+
   const feed = normalizeFeed(request.nextUrl.searchParams.get("feed"))
   if (!feed) {
     return NextResponse.json({ error: "Invalid feed parameter" }, { status: 400 })
@@ -306,4 +349,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
-

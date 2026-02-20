@@ -1,0 +1,20 @@
+
+> my-project@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://25.8.29.214:3000
+
+✓ Starting...
+✓ Ready in 647ms
+ GET / 200 in 42ms (compile: 3ms, proxy.ts: 4ms, render: 36ms)
+ GET /api/images?feed=recent&limit=20 200 in 98ms (compile: 80ms, proxy.ts: 4ms, render: 14ms)
+ GET /provisional/img-3.jpg 404 in 406ms (compile: 212ms, render: 193ms)
+ GET /provisional/img-1.jpg 404 in 429ms (compile: 211ms, render: 218ms)
+ GET /provisional/img-6.jpg 404 in 426ms (compile: 328ms, render: 98ms)
+ GET /provisional/img-7.jpg 404 in 423ms (compile: 299ms, render: 124ms)
+ GET /api/images?feed=recent&limit=20 200 in 12ms (compile: 2ms, proxy.ts: 4ms, render: 6ms)
+ GET /api/images?feed=recent&limit=20 200 in 164ms (compile: 150ms, proxy.ts: 8ms, render: 6ms)
+ GET /api/images?provisional_asset=Imagen%2017.png 200 in 177ms (compile: 146ms, proxy.ts: 10ms, render: 20ms)
+[?25h

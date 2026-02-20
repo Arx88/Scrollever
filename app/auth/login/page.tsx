@@ -1,11 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Eye, EyeOff, ArrowLeft, Zap } from "lucide-react"
+
+const HERO_IMAGE_FILES = [
+  "Imagen 2.png",
+  "Imagen 4.png",
+  "Imagen 7.png",
+  "Imagen 9.png",
+  "Imagen 10.png",
+  "Imagen 13.png",
+  "Imagen 14.png",
+  "Imagen 15.png",
+  "Imagen 17.png",
+  "Gemini_Generated_Image_3ts8ny3ts8ny3ts8.png",
+  "Gemini_Generated_Image_6sfjf26sfjf26sfj.png",
+  "Gemini_Generated_Image_o044ilo044ilo044.png",
+  "Gemini_Generated_Image_ujii97ujii97ujii.png",
+]
+const HERO_IMAGES = HERO_IMAGE_FILES.map((fileName) => `/provisional/${encodeURIComponent(fileName)}`)
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "signup">("login")
@@ -16,8 +33,19 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [signupSuccess, setSignupSuccess] = useState(false)
+  const [heroImageIndex, setHeroImageIndex] = useState(0)
   const { signIn, signUp } = useAuth()
   const router = useRouter()
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setHeroImageIndex((current) => (current + 1) % HERO_IMAGES.length)
+    }, 5000)
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,10 +110,10 @@ export default function LoginPage() {
       {/* Left side - visual */}
       <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden">
         <Image
-          src="/provisional/img-9.jpg"
+          src={HERO_IMAGES[heroImageIndex]}
           alt="SCROLLEVER featured art"
           fill
-          className="object-cover"
+          className="object-cover transition-opacity duration-700"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background" />
@@ -119,8 +147,8 @@ export default function LoginPage() {
             </div>
             <div className="w-px h-10 bg-foreground/10" />
             <div>
-              <span className="text-3xl font-mono font-bold text-amber-400">1</span>
-              <span className="block text-[10px] text-muted-foreground uppercase tracking-[0.15em] mt-1">Superlike / dia</span>
+              <span className="text-3xl font-mono font-bold text-amber-400">Top 50</span>
+              <span className="block text-[10px] text-muted-foreground uppercase tracking-[0.15em] mt-1">Hall of Fame</span>
             </div>
           </div>
         </div>
@@ -154,7 +182,7 @@ export default function LoginPage() {
           <p className="text-sm text-muted-foreground leading-relaxed mb-8">
             {mode === "login"
               ? "Inicia sesion para votar y decidir que imagenes sobreviven."
-              : "Unite a la comunidad. 1 superlike por dia. Poder infinito."
+              : "Unite a la comunidad y empeza a votar imagenes todos los dias."
             }
           </p>
 
@@ -266,22 +294,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Superlike teaser */}
-          <div className="mt-10 p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                <Zap className="w-4 h-4 text-amber-400" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
-                  Superlike diario
-                </p>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Cada usuario tiene 1 superlike por dia. Es tu voto de poder para consagrar imagenes en el Hall of Fame.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
