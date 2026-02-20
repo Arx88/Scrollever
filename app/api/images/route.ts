@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server"
-import { readFile } from "node:fs/promises"
-import path from "node:path"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { getFallbackFeed } from "@/lib/fallback-feed"
@@ -11,18 +9,6 @@ const FEED_VALUES = new Set<FeedType>(["recent", "immortal", "hall-of-fame"])
 const DEFAULT_LIMIT = 20
 const MAX_LIMIT = 50
 const SUPABASE_TIMEOUT_MS = 8000
-const PROVISIONAL_ASSET_DIR = "C:\\Users\\juanp\\Desktop\\ACIDO\\Everscroll"
-const PROVISIONAL_ASSET_NAMES = new Set([
-  "Imagen 2.png",
-  "Imagen 4.png",
-  "Imagen 7.png",
-  "Imagen 9.png",
-  "Imagen 10.png",
-  "Imagen 13.png",
-  "Imagen 14.png",
-  "Imagen 15.png",
-  "Imagen 17.png",
-])
 
 export const runtime = "nodejs"
 
@@ -92,28 +78,6 @@ function fallbackResponse(params: {
     degraded: true,
     reason: params.reason,
   })
-}
-
-async function provisionalAssetResponse(fileName: string) {
-  if (!PROVISIONAL_ASSET_NAMES.has(fileName)) {
-    return NextResponse.json({ error: "Unknown provisional asset" }, { status: 404 })
-  }
-
-  const absolutePath = path.join(PROVISIONAL_ASSET_DIR, fileName)
-
-  try {
-    const buffer = await readFile(absolutePath)
-
-    return new NextResponse(new Uint8Array(buffer), {
-      status: 200,
-      headers: {
-        "Content-Type": "image/png",
-        "Cache-Control": "public, max-age=300",
-      },
-    })
-  } catch {
-    return NextResponse.json({ error: "Provisional asset not found" }, { status: 404 })
-  }
 }
 
 async function loadFeedFromSupabase(params: {
@@ -209,11 +173,6 @@ async function loadFeedFromSupabase(params: {
 }
 
 export async function GET(request: NextRequest) {
-  const provisionalAsset = request.nextUrl.searchParams.get("provisional_asset")
-  if (provisionalAsset) {
-    return provisionalAssetResponse(provisionalAsset)
-  }
-
   const feed = normalizeFeed(request.nextUrl.searchParams.get("feed"))
   if (!feed) {
     return NextResponse.json({ error: "Invalid feed parameter" }, { status: 400 })

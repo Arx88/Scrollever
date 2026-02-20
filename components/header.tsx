@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Bell, Flame, Shield, Crown, User, LogOut, Star } from "lucide-react"
+import { Search, Crown, User, LogOut, Star, Zap } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useInteractions } from "@/lib/interactions-context"
@@ -8,18 +8,19 @@ import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 
 export function Header() {
-  const [searchFocused, setSearchFocused] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
   const { user, signOut } = useAuth()
   const { canSuperlike, superlikeResetTime } = useInteractions()
   const router = useRouter()
   const pathname = usePathname()
   const menuRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const isHallOfFame = pathname === "/hall-of-fame"
   const resetTime = superlikeResetTime()
+  const hasSuperlike = canSuperlike()
 
-  // Close menu on click outside
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -30,6 +31,12 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
 
+  useEffect(() => {
+    if (showSearch && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [showSearch])
+
   const handleSignOut = () => {
     signOut()
     setShowUserMenu(false)
@@ -37,11 +44,12 @@ export function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
-      <div className="bg-background/80 backdrop-blur-2xl border-b border-border/20">
-        <div className="flex items-center justify-between px-3 md:px-6 h-[56px]">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-[30px] h-[30px] rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-display text-xs font-extrabold">
+      <div className="bg-background/90 backdrop-blur-2xl border-b border-border/10">
+        <div className="flex items-center justify-between px-3 md:px-5 h-[56px]">
+
+          {/* Left: Logo */}
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-display text-xs font-extrabold">
               S
             </div>
             <span className="font-display text-foreground font-extrabold text-lg tracking-tight hidden sm:block uppercase">
@@ -49,123 +57,138 @@ export function Header() {
             </span>
           </Link>
 
-          {/* Center: Live stats pill + Hall of Fame link */}
-          <div className="hidden md:flex items-center gap-3">
-            <div className="flex items-center gap-3 bg-surface/80 rounded-full px-4 py-1.5 border border-border/20">
-              <div className="flex items-center gap-1.5">
-                <Flame className="w-3 h-3 text-red-400" />
-                <span className="text-[11px] font-mono text-foreground/70">
-                  <span className="text-foreground font-bold">147</span> luchando
-                </span>
-              </div>
-              <div className="w-px h-3 bg-border/30" />
-              <div className="flex items-center gap-1.5">
-                <Shield className="w-3 h-3 text-primary" />
-                <span className="text-[11px] font-mono text-foreground/70">
-                  <span className="text-primary font-bold">2.4k</span> inmortales
-                </span>
-              </div>
-            </div>
-
+          {/* Center: Navigation */}
+          <nav className="hidden md:flex items-center gap-1">
+            <Link
+              href="/"
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+                !isHallOfFame
+                  ? "text-foreground bg-surface"
+                  : "text-muted-foreground hover:text-foreground hover:bg-surface/50"
+              }`}
+            >
+              Feed
+            </Link>
             <Link
               href="/hall-of-fame"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
                 isHallOfFame
-                  ? "bg-amber-500/15 border-amber-500/30 text-amber-400"
-                  : "bg-surface/60 border-transparent text-foreground/70 hover:bg-surface hover:text-amber-400"
+                  ? "text-amber-400 bg-amber-500/10"
+                  : "text-muted-foreground hover:text-amber-400 hover:bg-amber-500/5"
               }`}
             >
               <Crown className="w-3 h-3" />
-              <span className="text-[11px] font-bold uppercase tracking-wider">Hall of Fame</span>
+              Top 10
             </Link>
-          </div>
+          </nav>
 
-          {/* Right: Search + superlike status + auth */}
-          <div className="flex items-center gap-1">
-            {/* Search */}
-            <div
-              className={`hidden lg:flex items-center rounded-full px-3 py-1.5 gap-2 max-w-[220px] transition-all duration-300 border ${
-                searchFocused
-                  ? "bg-surface border-primary/30 shadow-[0_0_16px_rgba(209,254,23,0.06)]"
-                  : "bg-surface/60 border-transparent"
-              }`}
-            >
-              <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-              <input
-                type="text"
-                placeholder="Buscar..."
-                className="bg-transparent border-none outline-none text-xs text-foreground placeholder:text-muted-foreground/50 w-full"
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
-              />
-            </div>
+          {/* Right section */}
+          <div className="flex items-center gap-2">
 
-            <button
-              className="lg:hidden p-2 rounded-lg hover:bg-surface transition-colors"
-              aria-label="Buscar"
-            >
-              <Search className="w-4 h-4 text-muted-foreground" />
-            </button>
+            {/* Search toggle */}
+            {showSearch ? (
+              <div className="flex items-center gap-2 bg-surface border border-border/30 rounded-lg px-3 py-1.5 animate-fade-in-up">
+                <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Buscar..."
+                  className="bg-transparent border-none outline-none text-xs text-foreground placeholder:text-muted-foreground/40 w-28 md:w-40"
+                  onBlur={() => setShowSearch(false)}
+                />
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowSearch(true)}
+                className="p-2 rounded-lg hover:bg-surface text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Buscar"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Superlike status - prominent when available */}
+            {user && (
+              <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                hasSuperlike
+                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/15"
+                  : "bg-surface/60 text-muted-foreground border border-border/10"
+              }`}>
+                <Zap className={`w-3 h-3 ${hasSuperlike ? "text-amber-400" : "text-muted-foreground/60"}`} />
+                <span className="hidden sm:inline">
+                  {hasSuperlike ? "1 Superlike" : resetTime ? resetTime : "Usado"}
+                </span>
+                <span className="sm:hidden">
+                  {hasSuperlike ? "1" : "0"}
+                </span>
+              </div>
+            )}
 
             {/* Hall of Fame mobile */}
             <Link
               href="/hall-of-fame"
               className={`md:hidden p-2 rounded-lg transition-colors ${
-                isHallOfFame ? "text-amber-400" : "text-muted-foreground hover:text-amber-400"
+                isHallOfFame ? "text-amber-400 bg-amber-500/10" : "text-muted-foreground hover:text-amber-400"
               }`}
-              aria-label="Hall of Fame"
+              aria-label="Top 10"
             >
               <Crown className="w-4 h-4" />
             </Link>
 
-            {/* Superlike status pill */}
-            {user && (
-              <div className={`hidden sm:flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold ${
-                canSuperlike()
-                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                  : "bg-surface text-muted-foreground border border-border/20"
-              }`}>
-                <Star className={`w-3 h-3 ${canSuperlike() ? "fill-amber-400" : ""}`} />
-                {canSuperlike() ? "1 SL" : resetTime ? `${resetTime}` : "0 SL"}
-              </div>
-            )}
-
-            <button
-              className="relative p-2 rounded-lg hover:bg-surface transition-colors"
-              aria-label="Notificaciones"
-            >
-              <Bell className="w-4 h-4 text-muted-foreground" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary rounded-full" />
-            </button>
-
-            {/* Auth button / User menu */}
+            {/* Auth */}
             {user ? (
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-surface transition-colors"
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-surface transition-colors"
                 >
-                  <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center ring-1 ring-primary/30">
+                  <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center ring-1 ring-primary/20">
                     <span className="text-[11px] font-bold text-primary uppercase">
                       {user.username?.[0] ?? "U"}
                     </span>
                   </div>
-                  <span className="text-xs font-bold text-foreground hidden sm:block">
+                  <span className="text-xs font-bold text-foreground hidden md:block">
                     {user.username}
                   </span>
                 </button>
 
-                {/* Dropdown */}
                 {showUserMenu && (
-                  <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border/30 rounded-xl shadow-xl overflow-hidden z-50">
-                    <div className="p-3 border-b border-border/20">
-                      <p className="text-xs font-bold text-foreground">@{user.username}</p>
-                      <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border/20 rounded-xl shadow-2xl overflow-hidden z-50">
+                    <div className="p-4 border-b border-border/10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center ring-1 ring-primary/20">
+                          <User className="w-4 h-4 text-primary" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-foreground truncate">@{user.username}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="p-1">
+
+                    {/* Superlike status in dropdown */}
+                    <div className="p-3 border-b border-border/10">
+                      <div className={`flex items-center gap-2.5 p-2.5 rounded-lg ${
+                        hasSuperlike ? "bg-amber-500/10" : "bg-surface"
+                      }`}>
+                        <Star className={`w-4 h-4 ${hasSuperlike ? "text-amber-400 fill-amber-400" : "text-muted-foreground"}`} />
+                        <div>
+                          <p className={`text-[11px] font-bold ${hasSuperlike ? "text-amber-400" : "text-muted-foreground"}`}>
+                            {hasSuperlike ? "Superlike disponible" : "Superlike usado"}
+                          </p>
+                          {!hasSuperlike && resetTime && (
+                            <p className="text-[10px] text-muted-foreground">
+                              Se renueva en {resetTime}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-1.5">
                       <button
                         onClick={handleSignOut}
-                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                       >
                         <LogOut className="w-3.5 h-3.5" />
                         Cerrar sesion
@@ -177,7 +200,7 @@ export function Header() {
             ) : (
               <button
                 onClick={() => router.push("/auth/login")}
-                className="bg-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-bold hover:shadow-[0_0_16px_rgba(209,254,23,0.2)] transition-all active:scale-95 font-display uppercase tracking-wide"
+                className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-xs font-bold hover:shadow-[0_0_20px_rgba(209,254,23,0.2)] transition-all active:scale-95 font-display uppercase tracking-wider"
               >
                 Entrar
               </button>

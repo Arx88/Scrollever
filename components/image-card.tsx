@@ -15,7 +15,7 @@ interface ImageCardProps {
   isFeatured?: boolean
 }
 
-export function ImageCard({ image, index, onImageClick, isFeatured }: ImageCardProps) {
+export function ImageCard({ image, index, onImageClick }: ImageCardProps) {
   const { user } = useAuth()
   const { isLiked, toggleLike, getLikeCount, isSuperliked, canSuperlike, addSuperlike, getSuperlikeCount } = useInteractions()
   const router = useRouter()
@@ -109,7 +109,7 @@ export function ImageCard({ image, index, onImageClick, isFeatured }: ImageCardP
         alt={image.prompt.substring(0, 60)}
         fill
         className={`object-cover transition-all duration-700 ease-out group-hover:scale-[1.03] ${imageLoaded ? "opacity-100" : "opacity-0"}`}
-        sizes={isFeatured ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"}
+        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         onLoad={() => setImageLoaded(true)}
         onError={() => {
           setImageFailed(true)
@@ -220,14 +220,14 @@ export function ImageCard({ image, index, onImageClick, isFeatured }: ImageCardP
               disabled={!superlikeEnabled}
               className={`flex items-center gap-1 px-2 py-1 rounded-lg backdrop-blur-md text-xs font-bold transition-all active:scale-90 ${
                 superliked
-                  ? "bg-amber-500/20 text-amber-400"
+                  ? "bg-amber-500/25 text-amber-400 ring-1 ring-amber-500/30"
                   : superlikeEnabled
-                    ? "bg-black/40 text-foreground/90 hover:bg-black/60"
+                    ? "bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 hover:ring-1 hover:ring-amber-500/20"
                     : "bg-black/20 text-foreground/40 cursor-not-allowed"
               }`}
               aria-label={superliked ? "Superlike dado" : "Dar superlike"}
             >
-              <Star className={`w-3 h-3 ${superliked ? "fill-amber-400 text-amber-400" : ""}`} />
+              <Star className={`w-3 h-3 ${superliked ? "fill-amber-400 text-amber-400" : "text-amber-400/80"}`} />
               <span>{superlikeCount}</span>
             </button>
           </div>

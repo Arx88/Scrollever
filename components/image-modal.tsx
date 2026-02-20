@@ -235,7 +235,7 @@ export function ImageModal({ image, onClose }: ImageModalProps) {
               </button>
             </div>
 
-            {/* Action buttons */}
+            {/* Action buttons row */}
             <div className="flex items-center gap-1.5">
               {/* Like */}
               <button
@@ -250,24 +250,6 @@ export function ImageModal({ image, onClose }: ImageModalProps) {
                   className={`w-4 h-4 ${liked ? "fill-primary text-primary" : ""} ${animateLike ? "animate-like" : ""}`}
                 />
                 {likeCount >= 1000 ? `${(likeCount / 1000).toFixed(1)}k` : likeCount}
-              </button>
-
-              {/* Superlike */}
-              <button
-                onClick={handleSuperlike}
-                disabled={superliked}
-                className={`flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-bold transition-all active:scale-95 flex-1 justify-center ${
-                  superliked
-                    ? "bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/30"
-                    : canSuperlike()
-                      ? "bg-surface text-foreground hover:bg-amber-500/10 hover:text-amber-400"
-                      : "bg-surface text-muted-foreground opacity-50 cursor-not-allowed"
-                }`}
-              >
-                <Star
-                  className={`w-4 h-4 ${superliked ? "fill-amber-400 text-amber-400" : ""}`}
-                />
-                {superlikeCount}
               </button>
 
               {/* Save */}
@@ -289,31 +271,62 @@ export function ImageModal({ image, onClose }: ImageModalProps) {
               </button>
             </div>
 
-            {/* Superlike error/info */}
-            {superlikeError && (
-              <div className="mt-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                <p className="text-[11px] text-amber-400 font-bold">{superlikeError}</p>
-              </div>
-            )}
+            {/* Superlike - dedicated prominent section */}
+            <div className={`mt-4 rounded-xl border overflow-hidden ${
+              superliked
+                ? "bg-amber-500/8 border-amber-500/20"
+                : canSuperlike()
+                  ? "bg-surface border-amber-500/15 hover:border-amber-500/30"
+                  : "bg-surface/50 border-border/20"
+            }`}>
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      superliked ? "bg-amber-500/20" : canSuperlike() ? "bg-amber-500/10" : "bg-surface"
+                    }`}>
+                      <Star className={`w-4 h-4 ${superliked ? "fill-amber-400 text-amber-400" : canSuperlike() ? "text-amber-400" : "text-muted-foreground"}`} />
+                    </div>
+                    <div>
+                      <p className={`text-xs font-bold uppercase tracking-wider ${
+                        superliked ? "text-amber-400" : canSuperlike() ? "text-foreground" : "text-muted-foreground"
+                      }`}>
+                        Superlike
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {superliked ? "Le diste tu voto de poder" : canSuperlike() ? "1 por dia. Hazlo contar." : resetTime ? `Se renueva en ${resetTime}` : "Usado hoy"}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-lg font-mono font-bold text-amber-400">{superlikeCount}</span>
+                </div>
 
-            {/* Superlike daily status */}
-            {user && !canSuperlike() && !superliked && resetTime && (
-              <div className="mt-2 px-3 py-2 rounded-lg bg-surface border border-border/20">
-                <p className="text-[10px] text-muted-foreground">
-                  Superlike usado hoy. Se renueva en <span className="text-foreground font-bold">{resetTime}</span>
+                <button
+                  onClick={handleSuperlike}
+                  disabled={superliked || !canSuperlike()}
+                  className={`w-full py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] ${
+                    superliked
+                      ? "bg-amber-500/15 text-amber-400 cursor-default"
+                      : canSuperlike()
+                        ? "bg-amber-500/90 text-black hover:bg-amber-500 hover:shadow-[0_0_24px_rgba(245,158,11,0.3)]"
+                        : "bg-surface-hover text-muted-foreground cursor-not-allowed"
+                  }`}
+                >
+                  {superliked ? "Superlike dado" : canSuperlike() ? "Dar Superlike" : "Superlike no disponible"}
+                </button>
+              </div>
+
+              {superlikeError && (
+                <div className="px-4 pb-3">
+                  <p className="text-[11px] text-amber-400 font-bold">{superlikeError}</p>
+                </div>
+              )}
+
+              <div className="px-4 py-2.5 bg-amber-500/5 border-t border-amber-500/10">
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  Las imagenes con mas superlikes entran al <span className="text-amber-400 font-bold">Hall of Fame</span> y se vuelven legendarias para siempre.
                 </p>
               </div>
-            )}
-
-            {/* Superlike context message */}
-            <div className="mt-3 px-3 py-2 rounded-lg bg-amber-500/5 border border-amber-500/10">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Star className="w-3 h-3 text-amber-400" />
-                <span className="text-[9px] uppercase tracking-[0.15em] text-amber-400 font-bold">Superlike</span>
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                1 por dia. Significa {"\"esta merece ser historica\""}. Las imagenes con mas superlikes entran al Hall of Fame.
-              </p>
             </div>
           </div>
 
@@ -321,46 +334,87 @@ export function ImageModal({ image, onClose }: ImageModalProps) {
 
           {/* Survival status card */}
           <div className="p-5 lg:p-6 pb-4">
-            <div className={`p-3.5 rounded-xl border ${
+            <div className={`rounded-xl border overflow-hidden ${
               image.isHallOfFame
-                ? "bg-amber-500/5 border-amber-500/20"
+                ? "border-amber-500/25"
                 : image.isSurvivor
-                  ? "bg-primary/5 border-primary/20"
+                  ? "border-primary/25"
                   : isDying
-                    ? "bg-red-500/5 border-red-500/20"
-                    : "bg-surface border-border/30"
+                    ? "border-red-500/25 animate-dying"
+                    : "border-border/30"
             }`}>
-              <div className="flex items-center gap-2.5 mb-2">
+              {/* Status header bar */}
+              <div className={`px-4 py-3 flex items-center gap-2.5 ${
+                image.isHallOfFame
+                  ? "bg-amber-500/10"
+                  : image.isSurvivor
+                    ? "bg-primary/8"
+                    : isDying
+                      ? "bg-red-500/10"
+                      : "bg-surface"
+              }`}>
                 {image.isHallOfFame ? (
                   <>
                     <Crown className="w-4 h-4 text-amber-400" />
-                    <span className="text-xs font-bold text-amber-400 font-display uppercase">Hall of Fame</span>
+                    <span className="text-xs font-bold text-amber-400 font-display uppercase tracking-wider">Hall of Fame</span>
                   </>
                 ) : image.isSurvivor ? (
                   <>
                     <Shield className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-bold text-primary font-display uppercase">Sobreviviente Inmortal</span>
+                    <span className="text-xs font-bold text-primary font-display uppercase tracking-wider">Inmortal</span>
                   </>
                 ) : isDying ? (
                   <>
                     <Flame className="w-4 h-4 text-red-400 animate-pulse" />
-                    <span className="text-xs font-bold text-red-400 font-display uppercase">En peligro de extincion</span>
+                    <span className="text-xs font-bold text-red-400 font-display uppercase tracking-wider">En peligro</span>
+                    <span className="ml-auto text-xs font-mono font-bold text-red-400">{image.hoursLeft}h</span>
                   </>
                 ) : (
                   <>
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-xs font-bold text-foreground font-display uppercase">Luchando por sobrevivir</span>
+                    <Clock className="w-4 h-4 text-foreground/60" />
+                    <span className="text-xs font-bold text-foreground font-display uppercase tracking-wider">Luchando</span>
+                    <span className="ml-auto text-xs font-mono font-bold text-foreground/60">{image.hoursLeft}h</span>
                   </>
                 )}
               </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                {image.isHallOfFame
-                  ? `Esta imagen es legendaria. ${superlikeCount} superlikes la consagraron en el Hall of Fame de SCROLLEVER.`
-                  : image.isSurvivor
-                    ? "Esta imagen supero las 24h con suficientes likes. Ahora vive para siempre en SCROLLEVER."
-                    : `Necesita ${image.likesNeeded.toLocaleString()} likes en 24h para sobrevivir. Le quedan ${image.hoursLeft}h. Tu like puede salvarla.`
-                }
-              </p>
+
+              {/* Status body */}
+              <div className={`px-4 py-3 ${
+                image.isHallOfFame ? "bg-amber-500/5" : image.isSurvivor ? "bg-primary/3" : isDying ? "bg-red-500/5" : "bg-surface/50"
+              }`}>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {image.isHallOfFame
+                    ? `Legendaria. ${superlikeCount} superlikes la consagraron.`
+                    : image.isSurvivor
+                      ? "Supero las 24h. Vive para siempre en SCROLLEVER."
+                      : `Necesita ${image.likesNeeded.toLocaleString()} likes en 24h para sobrevivir.`
+                  }
+                </p>
+
+                {/* Progress bar for non-survivors */}
+                {!image.isSurvivor && !image.isHallOfFame && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] font-mono text-foreground/50">
+                        {likeCount.toLocaleString()} / {image.likesNeeded.toLocaleString()}
+                      </span>
+                      <span className={`text-[10px] font-mono font-bold ${
+                        isSafe ? "text-primary" : isDying ? "text-red-400" : "text-foreground/50"
+                      }`}>
+                        {Math.round(survivalProgress)}%
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full bg-foreground/10 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${
+                          isSafe ? "bg-primary" : isDying ? "bg-red-500" : "bg-foreground/30"
+                        }`}
+                        style={{ width: `${survivalProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

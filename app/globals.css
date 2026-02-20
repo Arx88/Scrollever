@@ -156,3 +156,13 @@
 .animate-dying {
   animation: dyingPulse 2s ease-in-out infinite;
 }
+
+/* Gold glow for #1 podium */
+@keyframes goldGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+  50% { box-shadow: 0 0 20px 4px rgba(245, 158, 11, 0.15); }
+}
+
+.animate-gold-glow {
+  animation: goldGlow 3s ease-in-out infinite;
+}

@@ -52,20 +52,9 @@ export const categories = [
 
 export const aiImages: AIImage[] = []
 
-function resolveAspectRatio(width: number | null, height: number | null): "tall" | "wide" | "square" {
-  if (!width || !height) {
-    return "tall"
-  }
-
-  const ratio = width / height
-  if (ratio > 1.2) {
-    return "wide"
-  }
-  if (ratio < 0.9) {
-    return "tall"
-  }
-
-  return "square"
+function resolveAspectRatio(_width: number | null, _height: number | null): "tall" | "wide" | "square" {
+  // All images are displayed in 9:16 portrait format
+  return "tall"
 }
 
 function resolveAuthor(image: ApiImage): string {

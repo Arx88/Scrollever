@@ -6,11 +6,17 @@ import { ImageModal } from "@/components/image-modal"
 import { ImageCard } from "@/components/image-card"
 import { mapApiImageToAIImage, type AIImage, type ApiImage } from "@/lib/image-data"
 import { useInteractions } from "@/lib/interactions-context"
-import { Crown, Trophy, Star } from "lucide-react"
+import { Crown, Star, Zap } from "lucide-react"
 
 interface ImagesApiResponse {
   items: ApiImage[]
 }
+
+const rankStyles = [
+  { ring: "ring-2 ring-amber-400/50", badge: "bg-amber-500 text-black", label: "1st" },
+  { ring: "ring-1 ring-foreground/20", badge: "bg-foreground/80 text-background", label: "2nd" },
+  { ring: "ring-1 ring-amber-700/30", badge: "bg-amber-700/80 text-foreground", label: "3rd" },
+]
 
 export default function HallOfFamePage() {
   const [selectedImage, setSelectedImage] = useState<AIImage | null>(null)
@@ -55,7 +61,7 @@ export default function HallOfFamePage() {
           return
         }
 
-        setError("No se pudo cargar Hall of Fame")
+        setError("No se pudo cargar el Hall of Fame")
         setHallOfFameImages([])
       } finally {
         if (mounted) {
@@ -83,113 +89,168 @@ export default function HallOfFamePage() {
     })
   }, [hallOfFameImages])
 
+  const totalSuperlikes = sortedImages.reduce((sum, img) => sum + img.superlikes, 0)
+
   return (
     <main className="min-h-screen bg-background">
       <Header />
 
-      <div className="px-4 md:px-6 lg:px-8 pt-[72px] pb-24">
-        <div className="max-w-3xl mx-auto text-center pt-8 pb-10 md:pt-12 md:pb-14">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Crown className="w-6 h-6 text-amber-400" />
-            <Trophy className="w-8 h-8 text-amber-400" />
-            <Crown className="w-6 h-6 text-amber-400" />
-          </div>
-          <h1 className="text-3xl md:text-5xl font-display font-extrabold text-foreground uppercase tracking-tight mb-3 text-balance">
-            Hall of Fame
-          </h1>
-          <p className="text-sm md:text-base text-muted-foreground max-w-lg mx-auto leading-relaxed">
-            Las imagenes que la comunidad considero legendarias. Consagradas para siempre por superlikes.
-          </p>
-
-          <div className="flex items-center justify-center gap-6 mt-6">
-            <div className="flex items-center gap-1.5">
-              <Crown className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-xs font-mono text-foreground/70">
-                <span className="text-amber-400 font-bold">{sortedImages.length}</span> legendarias
-              </span>
+      <div className="pt-[72px] pb-24">
+        {/* Hero section */}
+        <div className="px-4 md:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto pt-10 pb-12 md:pt-16 md:pb-16">
+            <div className="flex items-center gap-2.5 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                <Crown className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-5xl font-display font-extrabold text-foreground uppercase tracking-tight text-balance">
+                  Hall of Fame
+                </h1>
+              </div>
             </div>
-            <div className="w-px h-4 bg-border/30" />
-            <div className="flex items-center gap-1.5">
-              <Star className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-xs font-mono text-foreground/70">
-                <span className="text-amber-400 font-bold">
-                  {sortedImages.reduce((sum, img) => sum + img.superlikes, 0)}
-                </span>{" "}
-                superlikes totales
-              </span>
+            <p className="text-sm md:text-base text-muted-foreground max-w-lg leading-relaxed mb-8">
+              Las imagenes que la comunidad consagro como legendarias. Cada superlike es un voto de poder.
+            </p>
+
+            {/* Stats row */}
+            <div className="flex items-center gap-4 md:gap-8">
+              <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                <Crown className="w-4 h-4 text-amber-400" />
+                <div>
+                  <p className="text-xl font-mono font-bold text-amber-400">{sortedImages.length}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Legendarias</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-surface border border-border/20">
+                <Star className="w-4 h-4 text-amber-400" />
+                <div>
+                  <p className="text-xl font-mono font-bold text-foreground">{totalSuperlikes}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Superlikes</p>
+                </div>
+              </div>
+              <div className="hidden sm:flex items-center gap-3 px-4 py-3 rounded-xl bg-surface border border-border/20">
+                <Zap className="w-4 h-4 text-primary" />
+                <div>
+                  <p className="text-xl font-mono font-bold text-primary">1/dia</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Tu poder</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {loading ? (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground text-sm">Cargando Hall of Fame...</p>
+          <div className="text-center py-20">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
+            <p className="text-muted-foreground text-sm font-display font-bold uppercase tracking-wider">Cargando leyendas...</p>
           </div>
         ) : error ? (
-          <div className="text-center py-16">
-            <p className="text-destructive text-sm mb-4">{error}</p>
+          <div className="text-center py-20">
+            <p className="text-destructive text-sm mb-4 font-bold">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 rounded-lg bg-surface text-foreground text-xs font-bold uppercase tracking-wide"
+              className="px-5 py-2.5 rounded-xl bg-surface text-foreground text-xs font-bold uppercase tracking-wider border border-border/20 hover:bg-surface-hover transition-colors"
             >
               Reintentar
             </button>
           </div>
         ) : sortedImages.length > 0 ? (
-          <div className="max-w-6xl mx-auto">
-            {sortedImages.length >= 1 && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-4">
-                {sortedImages.slice(0, 3).map((image, i) => (
-                  <div key={image.id} className="relative">
-                    <div
-                      className={`absolute top-4 left-4 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${
-                        i === 0
-                          ? "bg-amber-500/90 text-black"
-                          : i === 1
-                            ? "bg-gray-300/90 text-black"
-                            : "bg-amber-700/90 text-foreground"
-                      }`}
-                    >
-                      <span className="text-xs font-bold font-mono">#{i + 1}</span>
-                      <Star className={`w-3 h-3 ${i === 0 ? "fill-black" : ""}`} />
-                      <span className="text-[10px] font-bold">{image.superlikes} SL</span>
-                    </div>
+          <div className="px-3 md:px-6 lg:px-8 max-w-7xl mx-auto">
 
-                    <div className={`aspect-[3/4] ${i === 0 ? "ring-2 ring-amber-500/40" : ""} rounded-xl overflow-hidden`}>
-                      <ImageCard
-                        image={image}
-                        index={i}
-                        onImageClick={(img) => setSelectedImage(img)}
-                        isFeatured={i === 0}
-                      />
-                    </div>
-                  </div>
-                ))}
+            {/* Podium: Top 3 */}
+            {sortedImages.length >= 1 && (
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-5 px-1">
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-amber-400 font-bold">Podio</span>
+                  <div className="flex-1 h-px bg-amber-500/10" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                  {sortedImages.slice(0, 3).map((image, i) => {
+                    const style = rankStyles[i]
+                    return (
+                      <div key={image.id} className="relative group/podium">
+                        {/* Rank badge */}
+                        <div className={`absolute top-3 left-3 z-20 flex items-center gap-2 px-3 py-1.5 rounded-lg ${style.badge}`}>
+                          <span className="text-sm font-display font-extrabold">{style.label}</span>
+                          <div className="w-px h-3 bg-current opacity-30" />
+                          <div className="flex items-center gap-1">
+                            <Star className={`w-3 h-3 ${i === 0 ? "fill-current" : ""}`} />
+                            <span className="text-[11px] font-bold font-mono">{image.superlikes}</span>
+                          </div>
+                        </div>
+
+                        {/* Superlike count overlay */}
+                        <div className="absolute top-3 right-3 z-20">
+                          <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-black/60 backdrop-blur-sm">
+                            <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                            <span className="text-xs font-bold font-mono text-amber-400">{image.superlikes}</span>
+                          </div>
+                        </div>
+
+                        <div className={`aspect-[9/16] ${style.ring} rounded-xl overflow-hidden`}>
+                          <ImageCard
+                            image={image}
+                            index={i}
+                            onImageClick={(img) => setSelectedImage(img)}
+                          />
+                        </div>
+
+                        {/* Bottom info bar */}
+                        <div className="mt-2.5 px-1">
+                          <p className="text-xs font-bold text-foreground truncate">@{image.author}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{image.prompt.substring(0, 50)}...</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
 
+            {/* Rest of rankings */}
             {sortedImages.length > 3 && (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
-                {sortedImages.slice(3).map((image, i) => (
-                  <div key={image.id} className="relative">
-                    <div className="absolute top-3 left-3 z-20 flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm">
-                      <span className="text-[10px] font-bold font-mono text-foreground/80">#{i + 4}</span>
-                      <Star className="w-2.5 h-2.5 text-amber-400" />
-                      <span className="text-[10px] font-bold text-amber-400">{image.superlikes}</span>
+              <div>
+                <div className="flex items-center gap-2 mb-5 px-1">
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold">Ranking</span>
+                  <div className="flex-1 h-px bg-border/20" />
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
+                  {sortedImages.slice(3).map((image, i) => (
+                    <div key={image.id} className="relative">
+                      {/* Rank number + superlikes */}
+                      <div className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold font-mono bg-black/70 backdrop-blur-sm text-foreground/80 px-2 py-0.5 rounded-md">
+                          #{i + 4}
+                        </span>
+                        <div className="flex items-center gap-0.5 bg-black/70 backdrop-blur-sm px-1.5 py-0.5 rounded-md">
+                          <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+                          <span className="text-[10px] font-bold text-amber-400">{image.superlikes}</span>
+                        </div>
+                      </div>
+                      <div className="aspect-[9/16] rounded-xl overflow-hidden">
+                        <ImageCard image={image} index={i + 3} onImageClick={(img) => setSelectedImage(img)} />
+                      </div>
                     </div>
-                    <div className="aspect-[3/4] rounded-xl overflow-hidden">
-                      <ImageCard image={image} index={i + 3} onImageClick={(img) => setSelectedImage(img)} />
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </div>
         ) : (
-          <div className="text-center py-20">
-            <Crown className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
-            <p className="text-muted-foreground text-sm">Todavia no hay imagenes en el Hall of Fame.</p>
-            <p className="text-muted-foreground/60 text-xs mt-1">Usa tu superlike diario para nominar imagenes.</p>
+          <div className="text-center py-24 px-4">
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-center justify-center mx-auto mb-6">
+              <Crown className="w-8 h-8 text-muted-foreground/30" />
+            </div>
+            <p className="text-foreground font-display font-bold text-lg uppercase tracking-tight mb-2">Todavia no hay leyendas</p>
+            <p className="text-muted-foreground text-sm max-w-sm mx-auto leading-relaxed">
+              Usa tu superlike diario para nominar imagenes. Las mas votadas llegaran aqui.
+            </p>
           </div>
         )}
       </div>

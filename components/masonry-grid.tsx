@@ -209,67 +209,24 @@ export function MasonryGrid({ activeCategory, onImageClick }: MasonryGridProps) 
     return () => observer.disconnect()
   }, [cursor, fetchImages, hasMore, loading])
 
-  const imageWithSizes = useMemo(() => {
-    return displayedImages.map((img, i) => {
-      const pos = i % 10
-
-      let colSpan = 1
-      let rowSpan = 1
-
-      if (pos === 0) {
-        colSpan = 2
-        rowSpan = 1
-      } else if (pos === 1) {
-        colSpan = 1
-        rowSpan = 2
-      } else if (pos === 3) {
-        colSpan = 2
-        rowSpan = 2
-      } else if (pos === 5) {
-        colSpan = 1
-        rowSpan = 2
-      } else if (pos === 8) {
-        colSpan = 2
-        rowSpan = 1
-      }
-
-      if (img.isSurvivor && pos === 2) {
-        colSpan = 2
-        rowSpan = 2
-      }
-
-      const isFeatured = colSpan === 2 && rowSpan === 2
-
-      return { ...img, colSpan, rowSpan, isFeatured }
-    })
-  }, [displayedImages])
-
   return (
     <div className="px-1.5 md:px-3 lg:px-4 pt-[72px] pb-16">
-      <div
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 md:gap-1.5 auto-rows-[160px] md:auto-rows-[200px] lg:auto-rows-[220px]"
-        style={{ gridAutoFlow: "dense" }}
-      >
-        {imageWithSizes.map((image, index) => {
-          return (
-            <div
-              key={image.id}
-              className="animate-fade-in-up min-w-0"
-              style={{
-                gridColumn: `span ${image.colSpan}`,
-                gridRow: `span ${image.rowSpan}`,
-                animationDelay: `${(index % imagesPerPage) * 30}ms`,
-              }}
-            >
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 md:gap-2">
+        {displayedImages.map((image, index) => (
+          <div
+            key={image.id}
+            className="animate-fade-in-up"
+            style={{ animationDelay: `${(index % imagesPerPage) * 30}ms` }}
+          >
+            <div className="relative aspect-[9/16] rounded-lg md:rounded-xl overflow-hidden">
               <ImageCard
                 image={image}
                 index={index % imagesPerPage}
                 onImageClick={onImageClick}
-                isFeatured={image.isFeatured}
               />
             </div>
-          )
-        })}
+          </div>
+        ))}
       </div>
 
       <div ref={loaderRef} className="flex flex-col items-center justify-center py-16 gap-4">
