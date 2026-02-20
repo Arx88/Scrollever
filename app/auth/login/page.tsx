@@ -22,7 +22,25 @@ const HERO_IMAGE_FILES = [
   "Gemini_Generated_Image_o044ilo044ilo044.png",
   "Gemini_Generated_Image_ujii97ujii97ujii.png",
 ]
-const HERO_IMAGES = HERO_IMAGE_FILES.map((fileName) => `/provisional/${encodeURIComponent(fileName)}`)
+const FALLBACK_HERO_IMAGES = HERO_IMAGE_FILES.map((fileName) => `/provisional/${encodeURIComponent(fileName)}`)
+
+interface RuntimeConfigResponse {
+  settings?: {
+    [key: string]: unknown
+  }
+  flags?: {
+    [key: string]: {
+      enabled: boolean
+      rollout: number
+    }
+  }
+}
+
+interface ImmortalImagesResponse {
+  items: Array<{
+    url: string
+  }>
+}
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "signup">("login")
@@ -34,18 +52,73 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [signupSuccess, setSignupSuccess] = useState(false)
   const [heroImageIndex, setHeroImageIndex] = useState(0)
+  const [heroImages, setHeroImages] = useState<string[]>(FALLBACK_HERO_IMAGES)
+  const [rotationMs, setRotationMs] = useState(5000)
   const { signIn, signUp } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
+    let mounted = true
+
+    const loadHeroConfig = async () => {
+      try {
+        const [configResponse, immortalsResponse] = await Promise.all([
+          fetch("/api/app-config", { cache: "no-store" }),
+          fetch("/api/images?feed=immortal&limit=50", { cache: "no-store" }),
+        ])
+
+        if (!mounted) {
+          return
+        }
+
+        if (configResponse.ok) {
+          const configPayload = (await configResponse.json()) as RuntimeConfigResponse
+          const rotationSetting = Number(configPayload.settings?.["login.hero.rotation_seconds"] ?? 5)
+          if (Number.isFinite(rotationSetting) && rotationSetting > 0) {
+            setRotationMs(Math.floor(rotationSetting * 1000))
+          }
+        }
+
+        if (immortalsResponse.ok) {
+          const immortalPayload = (await immortalsResponse.json()) as ImmortalImagesResponse
+          const urls = Array.from(
+            new Set(
+              (immortalPayload.items ?? [])
+                .map((item) => item.url)
+                .filter((url): url is string => typeof url === "string" && url.length > 0)
+            )
+          )
+
+          if (urls.length > 0) {
+            setHeroImages(urls)
+            setHeroImageIndex(0)
+          }
+        }
+      } catch {
+        // keep fallback hero rotation if runtime config or feed is unavailable.
+      }
+    }
+
+    void loadHeroConfig()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (heroImages.length <= 1) {
+      return
+    }
+
     const intervalId = window.setInterval(() => {
-      setHeroImageIndex((current) => (current + 1) % HERO_IMAGES.length)
-    }, 5000)
+      setHeroImageIndex((current) => (current + 1) % heroImages.length)
+    }, rotationMs)
 
     return () => {
       window.clearInterval(intervalId)
     }
-  }, [])
+  }, [heroImages.length, rotationMs])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -110,7 +183,7 @@ export default function LoginPage() {
       {/* Left side - visual */}
       <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden">
         <Image
-          src={HERO_IMAGES[heroImageIndex]}
+          src={heroImages[heroImageIndex] ?? FALLBACK_HERO_IMAGES[0]}
           alt="SCROLLEVER featured art"
           fill
           className="object-cover transition-opacity duration-700"

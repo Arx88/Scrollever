@@ -10,18 +10,24 @@ create table if not exists public.likes (
 
 alter table public.likes enable row level security;
 
-create policy if not exists "likes_select_public"
+drop policy if exists "likes_select_public" on public.likes;
+
+create policy "likes_select_public"
   on public.likes
   for select
   using (true);
 
-create policy if not exists "likes_insert_own"
+drop policy if exists "likes_insert_own" on public.likes;
+
+create policy "likes_insert_own"
   on public.likes
   for insert
   to authenticated
   with check (user_id = auth.uid());
 
-create policy if not exists "likes_delete_own"
+drop policy if exists "likes_delete_own" on public.likes;
+
+create policy "likes_delete_own"
   on public.likes
   for delete
   to authenticated

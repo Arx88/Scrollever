@@ -13,12 +13,16 @@ create unique index if not exists superlikes_user_utc_day_unique_idx
 
 alter table public.superlikes enable row level security;
 
-create policy if not exists "superlikes_select_public"
+drop policy if exists "superlikes_select_public" on public.superlikes;
+
+create policy "superlikes_select_public"
   on public.superlikes
   for select
   using (true);
 
-create policy if not exists "superlikes_insert_own"
+drop policy if exists "superlikes_insert_own" on public.superlikes;
+
+create policy "superlikes_insert_own"
   on public.superlikes
   for insert
   to authenticated

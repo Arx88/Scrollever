@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 import type { SupabaseClient, User as SupabaseUser } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
+import { normalizeRole, type AppRole } from "@/lib/admin/roles"
 
 export interface User {
   id: string
@@ -10,6 +11,7 @@ export interface User {
   username: string
   avatarUrl: string | null
   createdAt: string
+  role: AppRole
 }
 
 interface AuthContextType {
@@ -45,12 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           username: fallbackUsername,
           avatarUrl: null,
           createdAt: authUser.created_at,
+          role: "user",
         }
       }
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("username,avatar_url,created_at")
+        .select("username,avatar_url,created_at,role")
         .eq("id", authUser.id)
         .maybeSingle()
 
@@ -62,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         username: profile?.username ?? fallbackUsername,
         avatarUrl: profile?.avatar_url ?? null,
         createdAt: profile?.created_at ?? authUser.created_at,
+        role: normalizeRole(profile?.role),
       }
     },
     [supabase]

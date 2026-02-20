@@ -21,25 +21,33 @@ create table if not exists public.images (
 
 alter table public.images enable row level security;
 
-create policy if not exists "images_select_public"
+drop policy if exists "images_select_public" on public.images;
+
+create policy "images_select_public"
   on public.images
   for select
   using (deleted_at is null);
 
-create policy if not exists "images_insert_own"
+drop policy if exists "images_insert_own" on public.images;
+
+create policy "images_insert_own"
   on public.images
   for insert
   to authenticated
   with check (user_id = auth.uid());
 
-create policy if not exists "images_update_own"
+drop policy if exists "images_update_own" on public.images;
+
+create policy "images_update_own"
   on public.images
   for update
   to authenticated
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
-create policy if not exists "images_delete_own"
+drop policy if exists "images_delete_own" on public.images;
+
+create policy "images_delete_own"
   on public.images
   for delete
   to authenticated

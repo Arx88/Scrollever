@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Crown, User, LogOut, Star, Zap } from "lucide-react"
+import { Search, Crown, User, LogOut, Star, Zap, Shield } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useInteractions } from "@/lib/interactions-context"
@@ -18,6 +18,7 @@ export function Header() {
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const isHallOfFame = pathname === "/hall-of-fame"
+  const isAdmin = user?.role === "admin" || user?.role === "owner"
   const resetTime = superlikeResetTime()
   const hasSuperlike = canSuperlike()
 
@@ -186,6 +187,16 @@ export function Header() {
                     </div>
 
                     <div className="p-1.5">
+                      {isAdmin && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setShowUserMenu(false)}
+                          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs text-foreground hover:bg-surface transition-colors"
+                        >
+                          <Shield className="w-3.5 h-3.5" />
+                          Panel admin
+                        </Link>
+                      )}
                       <button
                         onClick={handleSignOut}
                         className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
@@ -211,4 +222,3 @@ export function Header() {
     </header>
   )
 }
-
