@@ -147,7 +147,7 @@ export function ImageModal({ image, onClose }: ImageModalProps) {
               src={image.src}
               alt={image.prompt.substring(0, 60)}
               fill
-              className="object-cover lg:object-contain"
+              className="object-cover lg:object-contain sharp-render contrast-[1.06] brightness-[1.02] saturate-[1.04]"
               sizes="(max-width: 1024px) 100vw, 55vw"
               priority
               onError={() => setImageFailed(true)}

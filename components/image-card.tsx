@@ -116,7 +116,7 @@ export function ImageCard({
         src={image.src}
         alt={image.prompt.substring(0, 60)}
         fill
-        className={`object-cover transition-all duration-700 ease-out group-hover:scale-[1.03] ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+        className={`object-cover sharp-render transition-all duration-700 ease-out group-hover:scale-[1.05] contrast-[1.06] brightness-[1.02] saturate-[1.04] ${imageLoaded ? "opacity-100" : "opacity-0"}`}
         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         onLoad={() => setImageLoaded(true)}
         onError={() => {

@@ -166,3 +166,14 @@
 .animate-gold-glow {
   animation: goldGlow 3s ease-in-out infinite;
 }
+
+/* 4K Sharp Rendering & Anti-aliasing */
+.sharp-render {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: high-quality;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
