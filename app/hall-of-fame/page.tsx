@@ -196,6 +196,8 @@ export default function HallOfFamePage() {
                           <ImageCard
                             image={image}
                             index={i}
+                            hideStatusBadge
+                            hideSaveButton
                             onImageClick={(img) => setSelectedImage(img)}
                           />
                         </div>
@@ -234,7 +236,12 @@ export default function HallOfFamePage() {
                         </div>
                       </div>
                       <div className="aspect-[9/16] rounded-xl overflow-hidden">
-                        <ImageCard image={image} index={i + 3} onImageClick={(img) => setSelectedImage(img)} />
+                        <ImageCard
+                          image={image}
+                          index={i + 3}
+                          hideStatusBadge
+                          onImageClick={(img) => setSelectedImage(img)}
+                        />
                       </div>
                     </div>
                   ))}
@@ -259,4 +266,3 @@ export default function HallOfFamePage() {
     </main>
   )
 }
-

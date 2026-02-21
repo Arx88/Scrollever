@@ -13,9 +13,17 @@ interface ImageCardProps {
   index: number
   onImageClick: (image: AIImage) => void
   isFeatured?: boolean
+  hideStatusBadge?: boolean
+  hideSaveButton?: boolean
 }
 
-export function ImageCard({ image, index, onImageClick }: ImageCardProps) {
+export function ImageCard({
+  image,
+  index,
+  onImageClick,
+  hideStatusBadge = false,
+  hideSaveButton = false,
+}: ImageCardProps) {
   const { user } = useAuth()
   const { isLiked, toggleLike, getLikeCount, isSuperliked, canSuperlike, addSuperlike, getSuperlikeCount } = useInteractions()
   const router = useRouter()
@@ -148,40 +156,44 @@ export function ImageCard({ image, index, onImageClick }: ImageCardProps) {
         </div>
       )}
 
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
-        {image.isHallOfFame ? (
-          <div className="flex items-center gap-1 bg-amber-500/90 text-black px-2 py-1 rounded-md">
-            <Crown className="w-3 h-3" />
-            <span className="text-[9px] font-bold uppercase tracking-wider font-mono">Hall of Fame</span>
-          </div>
-        ) : image.isSurvivor ? (
-          <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded-md">
-            <Shield className="w-3 h-3" />
-            <span className="text-[9px] font-bold uppercase tracking-wider font-mono">Inmortal</span>
-          </div>
-        ) : image.hoursLeft > 0 ? (
-          <div
-            className={`flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md ${
-              isDying ? "bg-red-500/80 text-foreground" : "bg-black/60 text-foreground/80"
-            }`}
-          >
-            <Clock className={`w-3 h-3 ${isDying ? "animate-pulse" : ""}`} />
-            <span className="text-[9px] font-bold font-mono">{image.hoursLeft}h</span>
-          </div>
-        ) : null}
-      </div>
+      {!hideStatusBadge && (
+        <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
+          {image.isHallOfFame ? (
+            <div className="flex items-center gap-1 bg-amber-500/90 text-black px-2 py-1 rounded-md">
+              <Crown className="w-3 h-3" />
+              <span className="text-[9px] font-bold uppercase tracking-wider font-mono">Hall of Fame</span>
+            </div>
+          ) : image.isSurvivor ? (
+            <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded-md">
+              <Shield className="w-3 h-3" />
+              <span className="text-[9px] font-bold uppercase tracking-wider font-mono">Inmortal</span>
+            </div>
+          ) : image.hoursLeft > 0 ? (
+            <div
+              className={`flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md ${
+                isDying ? "bg-red-500/80 text-foreground" : "bg-black/60 text-foreground/80"
+              }`}
+            >
+              <Clock className={`w-3 h-3 ${isDying ? "animate-pulse" : ""}`} />
+              <span className="text-[9px] font-bold font-mono">{image.hoursLeft}h</span>
+            </div>
+          ) : null}
+        </div>
+      )}
 
-      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
-        <button
-          onClick={handleSave}
-          className={`p-1.5 rounded-lg backdrop-blur-md transition-all active:scale-90 ${
-            saved ? "bg-primary text-primary-foreground" : "bg-black/50 text-foreground hover:bg-black/70"
-          }`}
-          aria-label={saved ? "Quitar de guardados" : "Guardar"}
-        >
-          <Bookmark className={`w-3.5 h-3.5 ${saved ? "fill-current" : ""}`} />
-        </button>
-      </div>
+      {!hideSaveButton && (
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
+          <button
+            onClick={handleSave}
+            className={`p-1.5 rounded-lg backdrop-blur-md transition-all active:scale-90 ${
+              saved ? "bg-primary text-primary-foreground" : "bg-black/50 text-foreground hover:bg-black/70"
+            }`}
+            aria-label={saved ? "Quitar de guardados" : "Guardar"}
+          >
+            <Bookmark className={`w-3.5 h-3.5 ${saved ? "fill-current" : ""}`} />
+          </button>
+        </div>
+      )}
 
       <div className="absolute bottom-0 left-0 right-0 p-2.5 z-10">
         {!image.isSurvivor && (
@@ -240,4 +252,3 @@ export function ImageCard({ image, index, onImageClick }: ImageCardProps) {
     </div>
   )
 }
-

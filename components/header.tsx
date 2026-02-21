@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Crown, User, LogOut, Star, Zap, Shield } from "lucide-react"
+import { Search, Crown, User, LogOut, Star, Zap, Shield, Wand2, FolderHeart } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useInteractions } from "@/lib/interactions-context"
@@ -18,6 +18,8 @@ export function Header() {
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const isHallOfFame = pathname === "/hall-of-fame"
+  const isCreate = pathname === "/create"
+  const isBoards = pathname === "/boards" || pathname.startsWith("/boards/")
   const isAdmin = user?.role === "admin" || user?.role === "owner"
   const resetTime = superlikeResetTime()
   const hasSuperlike = canSuperlike()
@@ -63,12 +65,34 @@ export function Header() {
             <Link
               href="/"
               className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
-                !isHallOfFame
+                !isHallOfFame && !isCreate && !isBoards
                   ? "text-foreground bg-surface"
                   : "text-muted-foreground hover:text-foreground hover:bg-surface/50"
               }`}
             >
               Feed
+            </Link>
+            <Link
+              href="/create"
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+                isCreate
+                  ? "text-foreground bg-surface"
+                  : "text-muted-foreground hover:text-foreground hover:bg-surface/50"
+              }`}
+            >
+              <Wand2 className="w-3 h-3" />
+              Create
+            </Link>
+            <Link
+              href="/boards"
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+                isBoards
+                  ? "text-foreground bg-surface"
+                  : "text-muted-foreground hover:text-foreground hover:bg-surface/50"
+              }`}
+            >
+              <FolderHeart className="w-3 h-3" />
+              Boards
             </Link>
             <Link
               href="/hall-of-fame"
@@ -126,6 +150,26 @@ export function Header() {
             )}
 
             {/* Hall of Fame mobile */}
+            <Link
+              href="/create"
+              className={`md:hidden p-2 rounded-lg transition-colors ${
+                isCreate ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary"
+              }`}
+              aria-label="Create"
+            >
+              <Wand2 className="w-4 h-4" />
+            </Link>
+
+            <Link
+              href="/boards"
+              className={`md:hidden p-2 rounded-lg transition-colors ${
+                isBoards ? "text-foreground bg-surface" : "text-muted-foreground hover:text-foreground"
+              }`}
+              aria-label="Boards"
+            >
+              <FolderHeart className="w-4 h-4" />
+            </Link>
+
             <Link
               href="/hall-of-fame"
               className={`md:hidden p-2 rounded-lg transition-colors ${
