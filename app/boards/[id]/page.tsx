@@ -147,7 +147,7 @@ export default function BoardDetailPage() {
                       {board.title}
                     </h1>
                     <p className="mt-2 text-xs text-muted-foreground">
-                      {board.description || "Sin descripción"} · @{board.ownerUsername}
+                      {board.description || "Sin descripcion"} | @{board.ownerUsername}
                     </p>
                   </div>
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface text-xs text-muted-foreground uppercase tracking-wider">
@@ -161,7 +161,7 @@ export default function BoardDetailPage() {
                 {visibleItems.length === 0 ? (
                   <div className="col-span-full rounded-2xl border border-border/20 bg-card p-8 text-center">
                     <p className="text-sm font-bold text-foreground uppercase tracking-wide">
-                      Este tablero todavía está vacío
+                      Este tablero todavia esta vacio
                     </p>
                   </div>
                 ) : (
@@ -179,7 +179,7 @@ export default function BoardDetailPage() {
                           {item.image?.prompt || item.image?.title || "Imagen guardada"}
                         </p>
                         <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-[0.14em] truncate">
-                          {item.image?.generation_provider ?? "scrollever"} · {item.image?.generation_model ?? "n/a"}
+                          {item.image?.generation_provider ?? "scrollever"} | {item.image?.generation_model ?? "n/a"}
                         </p>
                         {board.canEdit && (
                           <button

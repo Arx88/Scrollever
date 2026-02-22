@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/lib/auth-context'
 import { InteractionsProvider } from '@/lib/interactions-context'
+import { PostLoginPopupGate } from '@/components/post-login-popup-gate'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ export default function RootLayout({
         <AuthProvider>
           <InteractionsProvider>
             {children}
+            <PostLoginPopupGate />
           </InteractionsProvider>
         </AuthProvider>
         <Analytics />

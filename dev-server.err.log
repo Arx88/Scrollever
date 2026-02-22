@@ -40,3 +40,18 @@
   hint: null,
   message: 'new row violates row-level security policy for table "boards"'
 }
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ ReferenceError: SliderControl is not defined
+    at AdminPopupPage (app\admin\popup\page.tsx:303:14)
+  301 |             <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-bold">Layout (palancas)</p>
+  302 |
+> 303 |             <SliderControl
+      |              ^
+  304 |               label="Tamano del popup"
+  305 |               min={70}
+  306 |               max={120} {
+  digest: '3611121148'
+}
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload

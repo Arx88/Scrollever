@@ -70,6 +70,24 @@
   }
 }
 
+/* Interactive cursor feedback */
+:where(
+  a[href],
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  input[type="button"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled),
+  summary,
+  label[for]
+) {
+  cursor: pointer;
+}
+
+:where(button:disabled, input:disabled, [aria-disabled="true"]) {
+  cursor: not-allowed;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -176,4 +194,79 @@
   transform: translateZ(0);
   backface-visibility: hidden;
   perspective: 1000px;
+}
+
+/* Popup confirm button: metallic animated hover */
+.popup-confirm-btn {
+  background: linear-gradient(180deg, #e4ff62 0%, #d1fe17 50%, #b7de0b 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -12px 18px rgba(0, 0, 0, 0.18),
+    0 8px 24px rgba(209, 254, 23, 0.2);
+  isolation: isolate;
+}
+
+.popup-confirm-btn-coat {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0.08) 36%, rgba(0, 0, 0, 0.22) 100%);
+}
+
+.popup-confirm-btn-shine {
+  position: absolute;
+  top: -62%;
+  bottom: -62%;
+  left: -52%;
+  width: 42%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.08) 22%,
+    rgba(255, 255, 255, 0.98) 48%,
+    rgba(255, 255, 255, 0.48) 66%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-220%) skewX(-20deg);
+  opacity: 0;
+  filter: blur(0.4px);
+  mix-blend-mode: screen;
+}
+
+@keyframes popup-confirm-sweep {
+  0% {
+    transform: translateX(-220%) skewX(-20deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.98;
+  }
+  78% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(360%) skewX(-20deg);
+    opacity: 0;
+  }
+}
+
+.popup-confirm-btn:is(:hover, :focus-visible) {
+  filter: brightness(1.08) saturate(1.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.52),
+    inset 0 -12px 18px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(209, 254, 23, 0.24),
+    0 10px 34px rgba(209, 254, 23, 0.34);
+}
+
+.popup-confirm-btn:is(:hover, :focus-visible) .popup-confirm-btn-shine {
+  opacity: 1;
+  animation: popup-confirm-sweep 0.92s cubic-bezier(0.2, 0.8, 0.2, 1) 1 both;
+}
+
+.popup-confirm-btn:active {
+  filter: brightness(1.02);
 }

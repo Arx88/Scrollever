@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Bot, Flag, Settings, Shield } from "lucide-react"
+import { BarChart3, Bot, Flag, Settings, Shield, MessageSquare } from "lucide-react"
 
 const links = [
   {
@@ -14,6 +14,11 @@ const links = [
     href: "/admin/settings",
     label: "Settings",
     icon: Settings,
+  },
+  {
+    href: "/admin/popup",
+    label: "Popup",
+    icon: MessageSquare,
   },
   {
     href: "/admin/ai",
