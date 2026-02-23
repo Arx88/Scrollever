@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
+import { notifyBoardSave, notifyImageSavedByOther } from "@/lib/notifications/service"
+import { trackProductEvent } from "@/lib/analytics/track-event"
 
 const addItemSchema = z.object({
   imageId: z.string().uuid(),
@@ -84,6 +86,39 @@ export async function POST(
   }
 
   const payload = parsed.data
+
+  const [boardRes, imageRes, actorProfileRes, existingBoardItemRes] = await Promise.all([
+    supabase.from("boards").select("id,title").eq("id", id).maybeSingle(),
+    supabase
+      .from("images")
+      .select("id,user_id")
+      .eq("id", payload.imageId)
+      .is("deleted_at", null)
+      .maybeSingle(),
+    supabase.from("profiles").select("username").eq("id", authData.user.id).maybeSingle(),
+    supabase
+      .from("board_items")
+      .select("id")
+      .eq("board_id", id)
+      .eq("image_id", payload.imageId)
+      .maybeSingle(),
+  ])
+
+  if (boardRes.error || !boardRes.data) {
+    console.error("[boards/items] board_lookup_error", boardRes.error)
+    return NextResponse.json({ error: "Board not found" }, { status: 404 })
+  }
+
+  if (imageRes.error || !imageRes.data) {
+    console.error("[boards/items] image_lookup_error", imageRes.error)
+    return NextResponse.json({ error: "Image not found" }, { status: 404 })
+  }
+
+  const board = boardRes.data
+  const image = imageRes.data
+  const savedByUsername = actorProfileRes.data?.username ?? authData.user.email?.split("@")[0] ?? "creator"
+  const isNewBoardItem = !existingBoardItemRes.data
+
   const { data, error } = await supabase
     .from("board_items")
     .upsert(
@@ -109,6 +144,38 @@ export async function POST(
     .update({ cover_image_id: payload.imageId })
     .eq("id", id)
     .is("cover_image_id", null)
+
+  if (isNewBoardItem) {
+    void notifyBoardSave({
+      userId: authData.user.id,
+      imageId: payload.imageId,
+      boardId: id,
+      boardTitle: board.title,
+    })
+
+    if (image.user_id !== authData.user.id) {
+      void notifyImageSavedByOther({
+        ownerUserId: image.user_id,
+        imageId: payload.imageId,
+        boardId: id,
+        boardTitle: board.title,
+        savedByUsername,
+      })
+    }
+
+    void trackProductEvent({
+      supabase,
+      request,
+      eventName: "board_item_added",
+      userId: authData.user.id,
+      source: "boards",
+      path: request.nextUrl.pathname,
+      metadata: {
+        boardId: id,
+        imageId: payload.imageId,
+      },
+    })
+  }
 
   return NextResponse.json({ item: data }, { status: 201 })
 }

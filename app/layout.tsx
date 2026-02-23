@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from 'next'
+import { Suspense } from 'react'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/lib/auth-context'
 import { InteractionsProvider } from '@/lib/interactions-context'
 import { PostLoginPopupGate } from '@/components/post-login-popup-gate'
+import { AnalyticsRuntime } from '@/components/analytics-runtime'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -28,6 +30,9 @@ export default function RootLayout({
           <InteractionsProvider>
             {children}
             <PostLoginPopupGate />
+            <Suspense fallback={null}>
+              <AnalyticsRuntime />
+            </Suspense>
           </InteractionsProvider>
         </AuthProvider>
         <Analytics />

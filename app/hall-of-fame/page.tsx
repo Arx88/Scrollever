@@ -78,15 +78,7 @@ export default function HallOfFamePage() {
   }, [registerImages])
 
   const sortedImages = useMemo(() => {
-    return [...hallOfFameImages].sort((a, b) => {
-      if (b.superlikes !== a.superlikes) {
-        return b.superlikes - a.superlikes
-      }
-      if (b.likes !== a.likes) {
-        return b.likes - a.likes
-      }
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    })
+    return [...hallOfFameImages]
   }, [hallOfFameImages])
 
   const totalSuperlikes = sortedImages.reduce((sum, img) => sum + img.superlikes, 0)

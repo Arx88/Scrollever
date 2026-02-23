@@ -1,6 +1,7 @@
 import type { ApiImage } from "@/lib/image-data"
 
 type FeedType = "recent" | "immortal" | "hall-of-fame"
+type FeedSort = "position" | "newest"
 
 interface FallbackTemplate {
   id: string
@@ -20,6 +21,7 @@ interface FallbackTemplate {
 
 interface FallbackFeedParams {
   feed: FeedType
+  sort?: FeedSort
   category: string | null
   cursor: string | null
   limit: number
@@ -259,16 +261,35 @@ function materializeRows(nowMs: number): ApiImage[] {
   })
 }
 
-export function getFallbackFeed({ feed, category, cursor, limit }: FallbackFeedParams): FallbackFeedResult {
+export function getFallbackFeed({ feed, sort = "position", category, cursor, limit }: FallbackFeedParams): FallbackFeedResult {
   const nowMs = Date.now()
-  const cutoffMs = nowMs - 24 * 60 * 60 * 1000
   const normalizedCategory = category && category !== "all" && category !== "En llamas" ? category : null
 
   let rows = materializeRows(nowMs)
 
   if (feed === "recent") {
-    rows = rows.filter((row) => row.is_immortal || new Date(row.created_at).getTime() >= cutoffMs)
-    rows = rows.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    if (sort === "position") {
+      const challengers = rows
+        .filter((row) => !row.is_immortal && new Date(row.expires_at).getTime() > nowMs)
+        .sort((a, b) => {
+          if (b.like_count !== a.like_count) {
+            return b.like_count - a.like_count
+          }
+          if (b.superlike_count !== a.superlike_count) {
+            return b.superlike_count - a.superlike_count
+          }
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        })
+
+      const immortals = rows
+        .filter((row) => row.is_immortal)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+      rows = [...challengers, ...immortals]
+    } else {
+      rows = rows.filter((row) => row.is_immortal || new Date(row.expires_at).getTime() > nowMs)
+      rows = rows.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    }
   }
 
   if (feed === "immortal") {
@@ -291,6 +312,16 @@ export function getFallbackFeed({ feed, category, cursor, limit }: FallbackFeedP
 
   if (normalizedCategory) {
     rows = rows.filter((row) => row.category === normalizedCategory)
+  }
+
+  if (feed === "recent" && sort === "position") {
+    const offset = cursor ? Number(cursor) : 0
+    const startIndex = Number.isFinite(offset) && offset > 0 ? Math.floor(offset) : 0
+    const pageRows = rows.slice(startIndex, startIndex + limit + 1)
+    const hasMore = pageRows.length > limit
+    const items = hasMore ? pageRows.slice(0, limit) : pageRows
+    const nextCursor = hasMore ? String(startIndex + limit) : null
+    return { items, nextCursor }
   }
 
   if (cursor) {

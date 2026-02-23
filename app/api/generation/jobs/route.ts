@@ -3,6 +3,8 @@ import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { getGenerationRuntimeSettings, getUtcDateKey } from "@/lib/generation/runtime"
 import { generateImageWithProvider } from "@/lib/generation/providers"
+import { notifyGenerationReady } from "@/lib/notifications/service"
+import { trackProductEvent } from "@/lib/analytics/track-event"
 
 export const runtime = "nodejs"
 
@@ -205,6 +207,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to create generation job" }, { status: 500 })
   }
 
+  void trackProductEvent({
+    supabase,
+    request,
+    eventName: "generation_job_started",
+    userId: user.id,
+    source: "create",
+    path: request.nextUrl.pathname,
+    metadata: {
+      jobId: jobRow.id,
+      providerKey: jobRow.provider_key,
+      modelKey: jobRow.model_key,
+      aspectRatio,
+    },
+  })
+
   const generated = await generateImageWithProvider({
     providerKey: jobRow.provider_key,
     modelKey: jobRow.model_key,
@@ -223,6 +240,21 @@ export async function POST(request: NextRequest) {
         metadata: generated.metadata,
       })
       .eq("id", jobRow.id)
+
+    void trackProductEvent({
+      supabase,
+      request,
+      eventName: "generation_job_failed",
+      userId: user.id,
+      source: "create",
+      path: request.nextUrl.pathname,
+      metadata: {
+        jobId: jobRow.id,
+        providerKey: jobRow.provider_key,
+        modelKey: jobRow.model_key,
+        errorMessage: generated.errorMessage ?? "provider_generation_failed",
+      },
+    })
 
     return NextResponse.json(
       {
@@ -260,6 +292,22 @@ export async function POST(request: NextRequest) {
       .eq("id", jobRow.id)
 
     console.error("[generation/jobs] create_image_error", createImageError)
+
+    void trackProductEvent({
+      supabase,
+      request,
+      eventName: "generation_job_failed",
+      userId: user.id,
+      source: "create",
+      path: request.nextUrl.pathname,
+      metadata: {
+        jobId: jobRow.id,
+        providerKey: jobRow.provider_key,
+        modelKey: jobRow.model_key,
+        errorMessage: "image_creation_failed",
+      },
+    })
+
     return NextResponse.json({ error: "Failed to create generated image" }, { status: 500 })
   }
 
@@ -300,6 +348,43 @@ export async function POST(request: NextRequest) {
       },
     }),
   ])
+
+  void notifyGenerationReady({
+    userId: user.id,
+    imageId: createdImage.id,
+    jobId: jobRow.id,
+    prompt,
+  })
+
+  void trackProductEvent({
+    supabase,
+    request,
+    eventName: "generation_job_succeeded",
+    userId: user.id,
+    source: "create",
+    path: request.nextUrl.pathname,
+    metadata: {
+      jobId: jobRow.id,
+      imageId: createdImage.id,
+      providerKey: jobRow.provider_key,
+      modelKey: jobRow.model_key,
+    },
+  })
+
+  void trackProductEvent({
+    supabase,
+    request,
+    eventName: "image_published",
+    userId: user.id,
+    source: "create",
+    path: request.nextUrl.pathname,
+    metadata: {
+      imageId: createdImage.id,
+      originType: "generated",
+      providerKey: jobRow.provider_key,
+      modelKey: jobRow.model_key,
+    },
+  })
 
   return NextResponse.json(
     {

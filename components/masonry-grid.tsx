@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ImageCard } from "./image-card"
 import { mapApiImageToAIImage, type AIImage, type ApiImage } from "@/lib/image-data"
 import { useInteractions } from "@/lib/interactions-context"
+import type { FeedViewMode } from "@/lib/feed-view"
 
 const scrollPhrases = [
   "Si no scrolleas, no existes.",
@@ -24,6 +25,7 @@ const scrollPhrases = [
 
 interface MasonryGridProps {
   activeCategory: string
+  activeFeedView: FeedViewMode
   onImageClick: (image: AIImage) => void
 }
 
@@ -48,7 +50,7 @@ function randomPhrase() {
   return scrollPhrases[Math.floor(Math.random() * scrollPhrases.length)]
 }
 
-export function MasonryGrid({ activeCategory, onImageClick }: MasonryGridProps) {
+export function MasonryGrid({ activeCategory, activeFeedView, onImageClick }: MasonryGridProps) {
   const [displayedImages, setDisplayedImages] = useState<AIImage[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -62,6 +64,11 @@ export function MasonryGrid({ activeCategory, onImageClick }: MasonryGridProps) 
   const lastRequestRef = useRef<{ key: string; at: number } | null>(null)
 
   const { registerImages } = useInteractions()
+  const activeChallengersCount = useMemo(
+    () => displayedImages.filter((image) => !image.isSurvivor && image.hoursLeft > 0).length,
+    [displayedImages]
+  )
+  const isImmortalsOnly = activeFeedView === "immortals"
 
   const fetchImages = useCallback(
     async ({ reset, cursorValue }: { reset: boolean; cursorValue?: string | null }) => {
@@ -73,7 +80,7 @@ export function MasonryGrid({ activeCategory, onImageClick }: MasonryGridProps) 
         return
       }
 
-      const requestKey = `${activeCategory}:${reset ? "reset" : "page"}:${cursorValue ?? "null"}`
+      const requestKey = `${activeFeedView}:${activeCategory}:${reset ? "reset" : "page"}:${cursorValue ?? "null"}`
       const now = Date.now()
       if (lastRequestRef.current?.key === requestKey && now - lastRequestRef.current.at < 750) {
         return
@@ -87,7 +94,8 @@ export function MasonryGrid({ activeCategory, onImageClick }: MasonryGridProps) 
 
       try {
         const params = new URLSearchParams({
-          feed: "recent",
+          feed: activeFeedView === "immortals" ? "immortal" : "recent",
+          sort: activeFeedView === "mixed-newest" ? "newest" : "position",
           limit: String(imagesPerPage),
         })
 
@@ -131,7 +139,7 @@ export function MasonryGrid({ activeCategory, onImageClick }: MasonryGridProps) 
         setCursor(nextCursor)
         setHasMore(nextHasMore)
         hasMoreRef.current = nextHasMore
-        feedCache.set(activeCategory, {
+        feedCache.set(`${activeFeedView}:${activeCategory}`, {
           items: nextDisplayedImages,
           cursor: nextCursor,
           hasMore: nextHasMore,
@@ -145,14 +153,14 @@ export function MasonryGrid({ activeCategory, onImageClick }: MasonryGridProps) 
           setCursor(null)
           setHasMore(false)
           hasMoreRef.current = false
-          feedCache.delete(activeCategory)
+          feedCache.delete(`${activeFeedView}:${activeCategory}`)
         }
       } finally {
         isFetchingRef.current = false
         setLoading(false)
       }
     },
-    [activeCategory, registerImages]
+    [activeCategory, activeFeedView, registerImages]
   )
   const fetchImagesRef = useRef(fetchImages)
 
@@ -165,7 +173,8 @@ export function MasonryGrid({ activeCategory, onImageClick }: MasonryGridProps) 
   }, [displayedImages])
 
   useEffect(() => {
-    const cacheEntry = feedCache.get(activeCategory)
+    const cacheKey = `${activeFeedView}:${activeCategory}`
+    const cacheEntry = feedCache.get(cacheKey)
 
     if (cacheEntry && Date.now() - cacheEntry.savedAt <= FEED_CACHE_TTL_MS) {
       displayedImagesRef.current = cacheEntry.items
@@ -183,7 +192,7 @@ export function MasonryGrid({ activeCategory, onImageClick }: MasonryGridProps) 
     setHasMore(true)
     hasMoreRef.current = true
     void fetchImagesRef.current({ reset: true, cursorValue: null })
-  }, [activeCategory])
+  }, [activeCategory, activeFeedView])
 
   useEffect(() => {
     if (!loaderRef.current) {
@@ -229,6 +238,14 @@ export function MasonryGrid({ activeCategory, onImageClick }: MasonryGridProps) 
         ))}
       </div>
 
+      {!loading && !isImmortalsOnly && displayedImages.length > 0 && activeChallengersCount === 0 && (
+        <div className="mt-4 text-center">
+          <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/60">
+            Ahora no hay imagenes luchando. Solo inmortales visibles.
+          </p>
+        </div>
+      )}
+
       <div ref={loaderRef} className="flex flex-col items-center justify-center py-16 gap-4">
         {loading ? (
           <>
@@ -261,4 +278,3 @@ export function MasonryGrid({ activeCategory, onImageClick }: MasonryGridProps) 
     </div>
   )
 }
-

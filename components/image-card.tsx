@@ -40,6 +40,8 @@ export function ImageCard({
   const likeCount = image.likes + getLikeCount(image.id)
   const superlikeCount = image.superlikes + getSuperlikeCount(image.id)
   const superlikeEnabled = superliked || canSuperlike()
+  const hasLiveRanking = typeof image.rankToday === "number" && typeof image.cutoffPosition === "number"
+  const effectiveLikesNeeded = Math.max(1, image.likesNeeded)
 
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -77,9 +79,9 @@ export function ImageCard({
     setSaved(!saved)
   }
 
-  const survivalProgress = Math.min((likeCount / image.likesNeeded) * 100, 100)
-  const isDying = !image.isSurvivor && image.hoursLeft > 0 && image.hoursLeft <= 6
-  const isSafe = image.isSurvivor || survivalProgress >= 100
+  const survivalProgress = Math.min((likeCount / effectiveLikesNeeded) * 100, 100)
+  const isSafe = image.isSurvivor || (hasLiveRanking ? Boolean(image.willSurvive) : survivalProgress >= 100)
+  const isDying = !image.isSurvivor && !isSafe && image.hoursLeft > 0 && image.hoursLeft <= 6
 
   const [lastTap, setLastTap] = useState(0)
   const [showHeartBurst, setShowHeartBurst] = useState(false)
@@ -197,10 +199,14 @@ export function ImageCard({
 
       <div className="absolute bottom-0 left-0 right-0 p-2.5 z-10">
         {!image.isSurvivor && (
-          <div className="mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="mb-2 opacity-100 transition-opacity duration-300">
             <div className="flex items-center justify-between mb-0.5">
               <span className="text-[8px] font-mono text-foreground/60 uppercase tracking-wider">
-                {isSafe ? "Sobrevive" : `${likeCount.toLocaleString()} / ${image.likesNeeded.toLocaleString()}`}
+                {hasLiveRanking
+                  ? `#${image.rankToday} / corte #${image.cutoffPosition}`
+                  : isSafe
+                    ? "Sobrevive"
+                    : `${likeCount.toLocaleString()} / ${effectiveLikesNeeded.toLocaleString()}`}
               </span>
             </div>
             <div className="h-[2px] w-full bg-foreground/10 rounded-full overflow-hidden">

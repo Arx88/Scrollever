@@ -2,20 +2,21 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import type { LucideIcon } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import {
-  AlertTriangle,
-  ArrowRight,
-  Bot,
-  Clock3,
-  Filter,
   ImagePlus,
-  Layers3,
   Loader2,
-  RotateCcw,
   Save,
   Sparkles,
-  Wand2,
+  Plus,
+  Info,
+  X,
+  Check,
+  FolderPlus,
+  ChevronRight,
+  Lock,
+  Globe2,
+  Users
 } from "lucide-react"
 import { Header } from "@/components/header"
 
@@ -46,132 +47,48 @@ interface BoardItem {
   visibility: "public" | "private" | "collab"
 }
 
-const ASPECTS = ["1:1", "4:5", "9:16", "16:9"] as const
-
 const PROMPT_STARTERS = [
-  "editorial fashion portrait, dramatic lighting",
-  "streetwear campaign, high contrast, textured grain",
-  "luxury product hero, glossy reflections, studio setup",
-  "cinematic still, volumetric light, film look",
-  "retro futurism, neon accents, bold composition",
+  "editorial fashion",
+  "streetwear concept",
+  "luxury minimal",
+  "cinematic film",
+  "cyberpunk aesthetic",
 ] as const
-
-type JobFilter = "all" | "ready" | "active" | "failed"
-
-const JOB_FILTER_OPTIONS: Array<{ value: JobFilter; label: string }> = [
-  { value: "all", label: "Todo" },
-  { value: "ready", label: "Listas" },
-  { value: "active", label: "En proceso" },
-  { value: "failed", label: "Errores" },
-]
-
-const STATUS_META: Record<
-  GenerationJobItem["status"],
-  {
-    label: string
-    tone: string
-    cardTone: string
-    icon: LucideIcon
-    spin?: boolean
-  }
-> = {
-  queued: {
-    label: "En cola",
-    tone: "text-sky-300 border-sky-500/30 bg-sky-500/12",
-    cardTone: "from-sky-500/12 to-transparent",
-    icon: Clock3,
-  },
-  running: {
-    label: "Procesando",
-    tone: "text-amber-300 border-amber-500/30 bg-amber-500/12",
-    cardTone: "from-amber-500/12 to-transparent",
-    icon: Loader2,
-    spin: true,
-  },
-  succeeded: {
-    label: "Lista",
-    tone: "text-primary border-primary/35 bg-primary/12",
-    cardTone: "from-primary/12 to-transparent",
-    icon: Sparkles,
-  },
-  failed: {
-    label: "Error",
-    tone: "text-destructive border-destructive/30 bg-destructive/12",
-    cardTone: "from-destructive/12 to-transparent",
-    icon: AlertTriangle,
-  },
-  cancelled: {
-    label: "Cancelada",
-    tone: "text-muted-foreground border-border/30 bg-muted/30",
-    cardTone: "from-muted/20 to-transparent",
-    icon: Clock3,
-  },
-}
 
 export default function CreatePage() {
   const [prompt, setPrompt] = useState("")
-  const [negativePrompt, setNegativePrompt] = useState("")
   const [models, setModels] = useState<CreatorModel[]>([])
   const [selectedModel, setSelectedModel] = useState("")
-  const [selectedAspect, setSelectedAspect] = useState<(typeof ASPECTS)[number]>("9:16")
   const [jobs, setJobs] = useState<GenerationJobItem[]>([])
   const [boards, setBoards] = useState<BoardItem[]>([])
-  const [selectedBoard, setSelectedBoard] = useState("")
+  const [selectedBoardId, setSelectedBoardId] = useState("")
+  
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [savingImageId, setSavingImageId] = useState<string | null>(null)
   const [remainingToday, setRemainingToday] = useState<number>(0)
   const [dailyLimit, setDailyLimit] = useState<number>(5)
-  const [jobFilter, setJobFilter] = useState<JobFilter>("all")
   const [error, setError] = useState<string | null>(null)
+
+  // Estados del Modal
+  const [isBoardModalOpen, setIsBoardModalOpen] = useState(false)
+  const [showCreateInput, setShowCreateInput] = useState(false)
+  const [newBoardTitle, setNewBoardTitle] = useState("")
+  const [isCreatingBoard, setIsCreatingBoard] = useState(false)
+
+  const selectedBoard = useMemo(() => 
+    boards.find(b => b.id === selectedBoardId), 
+  [boards, selectedBoardId])
 
   const usagePercent = useMemo(() => {
     if (!dailyLimit || dailyLimit <= 0) return 0
-    const used = Math.max(0, dailyLimit - remainingToday)
-    return Math.max(0, Math.min(100, Math.round((used / dailyLimit) * 100)))
+    return Math.max(0, Math.min(100, Math.round(((dailyLimit - remainingToday) / dailyLimit) * 100)))
   }, [dailyLimit, remainingToday])
-
-  const selectedModelInfo = useMemo(
-    () => models.find((model) => model.modelKey === selectedModel) ?? null,
-    [models, selectedModel]
-  )
-
-  const selectedBoardTitle = useMemo(
-    () => boards.find((board) => board.id === selectedBoard)?.title ?? "",
-    [boards, selectedBoard]
-  )
-
-  const jobStats = useMemo(() => {
-    const queued = jobs.filter((job) => job.status === "queued").length
-    const running = jobs.filter((job) => job.status === "running").length
-    const failed = jobs.filter((job) => job.status === "failed").length
-    const completed = jobs.filter((job) => job.status === "succeeded" && job.resultImage).length
-    return { queued, running, failed, completed }
-  }, [jobs])
-
-  const filteredJobs = useMemo(() => {
-    if (jobFilter === "all") return jobs
-    if (jobFilter === "ready") {
-      return jobs.filter((job) => job.status === "succeeded" && job.resultImage)
-    }
-    if (jobFilter === "active") {
-      return jobs.filter((job) => job.status === "queued" || job.status === "running")
-    }
-    return jobs.filter((job) => job.status === "failed")
-  }, [jobs, jobFilter])
-
-  const promptWordCount = useMemo(() => {
-    const trimmed = prompt.trim()
-    if (!trimmed) return 0
-    return trimmed.split(/\s+/).length
-  }, [prompt])
 
   useEffect(() => {
     let mounted = true
     const load = async () => {
       setLoading(true)
-      setError(null)
-
       try {
         const [modelsRes, jobsRes, boardsRes] = await Promise.all([
           fetch("/api/generation/models", { cache: "no-store" }),
@@ -179,461 +96,397 @@ export default function CreatePage() {
           fetch("/api/boards?scope=mine&limit=100", { cache: "no-store" }),
         ])
 
-        if (!modelsRes.ok || !jobsRes.ok) {
-          throw new Error("creator_load_failed")
-        }
-
-        const modelsPayload = (await modelsRes.json()) as {
-          defaultModelKey: string
-          defaultAspectRatio: string
-          dailyFreeLimit: number
-          models: CreatorModel[]
-        }
-        const jobsPayload = (await jobsRes.json()) as {
-          dailyFreeLimit: number
-          remainingToday: number
-          items: GenerationJobItem[]
-        }
-        const boardsPayload = boardsRes.ok
-          ? ((await boardsRes.json()) as { items: BoardItem[] })
-          : { items: [] as BoardItem[] }
+        const modelsPayload = await modelsRes.json()
+        const jobsPayload = await jobsRes.json()
+        const boardsPayload = boardsRes.ok ? await boardsRes.json() : { items: [] }
 
         if (!mounted) return
 
         setModels(modelsPayload.models)
-        setSelectedModel(modelsPayload.defaultModelKey || modelsPayload.models[0]?.modelKey || "")
-        if (ASPECTS.includes(modelsPayload.defaultAspectRatio as (typeof ASPECTS)[number])) {
-          setSelectedAspect(modelsPayload.defaultAspectRatio as (typeof ASPECTS)[number])
-        }
+        const nanoBana = modelsPayload.models.find((m: CreatorModel) => 
+          m.displayName.toLowerCase().includes("nano") || m.modelKey.toLowerCase().includes("nano")
+        )
+        setSelectedModel(nanoBana?.modelKey || modelsPayload.defaultModelKey || "")
+        
         setJobs(jobsPayload.items)
-        setDailyLimit(jobsPayload.dailyFreeLimit ?? modelsPayload.dailyFreeLimit ?? 5)
+        setDailyLimit(jobsPayload.dailyFreeLimit ?? 5)
         setRemainingToday(jobsPayload.remainingToday ?? 0)
         setBoards(boardsPayload.items)
-        setSelectedBoard(boardsPayload.items[0]?.id ?? "")
+        if (boardsPayload.items.length > 0) setSelectedBoardId(boardsPayload.items[0].id)
       } catch {
-        if (mounted) {
-          setError("No se pudo cargar el creador")
-        }
+        if (mounted) setError("Error de conexión.")
       } finally {
-        if (mounted) {
-          setLoading(false)
-        }
+        if (mounted) setLoading(false)
       }
     }
-
     void load()
-    return () => {
-      mounted = false
-    }
+    return () => { mounted = false }
   }, [])
 
   const createImage = async () => {
-    if (!prompt.trim()) {
-      setError("Escribe un prompt para generar")
-      return
-    }
-    if (!selectedModel) {
-      setError("Selecciona un modelo")
-      return
-    }
-
+    if (!prompt.trim()) return
     setGenerating(true)
     setError(null)
     try {
       const response = await fetch("/api/generation/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt,
-          negativePrompt: negativePrompt.trim() ? negativePrompt : null,
-          modelKey: selectedModel,
-          aspectRatio: selectedAspect,
-        }),
+        body: JSON.stringify({ prompt, modelKey: selectedModel, aspectRatio: "9:16" }),
       })
-
-      const payload = (await response.json()) as {
-        item?: GenerationJobItem
-        usage?: {
-          dailyFreeLimit: number
-          remainingToday: number
-        }
-        error?: string
-      }
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? "generate_failed")
-      }
-
-      if (payload.item) {
-        setJobs((prev) => [payload.item!, ...prev])
-      }
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error)
+      if (payload.item) setJobs((prev) => [payload.item!, ...prev])
       if (payload.usage) {
         setDailyLimit(payload.usage.dailyFreeLimit)
         setRemainingToday(payload.usage.remainingToday)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo generar imagen")
+      setError(err instanceof Error ? err.message : "Error")
     } finally {
       setGenerating(false)
     }
   }
 
-  const saveToBoard = async (imageId: string) => {
-    if (!selectedBoard) {
-      setError("Crea o selecciona un tablero primero")
+  const handleSaveToBoard = async (imageId: string) => {
+    if (!selectedBoardId) {
+      setIsBoardModalOpen(true)
       return
     }
-
     setSavingImageId(imageId)
-    setError(null)
     try {
-      const response = await fetch(`/api/boards/${selectedBoard}/items`, {
+      await fetch(`/api/boards/${selectedBoardId}/items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageId }),
       })
-
-      if (!response.ok) {
-        throw new Error("No se pudo guardar la imagen en el tablero")
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo guardar en tablero")
     } finally {
       setSavingImageId(null)
     }
   }
 
-  const injectPromptStarter = (starter: string) => {
-    setPrompt((prev) => (prev.trim().length === 0 ? starter : `${prev.trim()}, ${starter}`))
-  }
-
-  const resetPromptComposer = () => {
-    setPrompt("")
-    setNegativePrompt("")
+  const createQuickBoard = async () => {
+    if (!newBoardTitle.trim()) return
+    setIsCreatingBoard(true)
+    try {
+      const res = await fetch("/api/boards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newBoardTitle, visibility: "private" }),
+      })
+      const data = await res.json()
+      if (res.ok && data.item) {
+        setBoards(prev => [data.item, ...prev])
+        setSelectedBoardId(data.item.id)
+        setNewBoardTitle("")
+        setShowCreateInput(false)
+        setIsBoardModalOpen(false)
+      }
+    } finally {
+      setIsCreatingBoard(false)
+    }
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30">
       <Header />
-      <div className="pt-[72px] pb-16 px-4 md:px-6 lg:px-8">
-        <div className="max-w-[1520px] mx-auto grid grid-cols-1 2xl:grid-cols-[460px_minmax(0,1fr)] gap-4 lg:gap-6">
-          <section className="rounded-2xl border border-border/20 bg-card overflow-hidden h-fit 2xl:sticky 2xl:top-[86px]">
-            <div className="p-4 md:p-5 border-b border-border/10 bg-[radial-gradient(circle_at_top_right,rgba(209,254,23,0.2),transparent_55%)]">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Creator Studio</p>
-              <h1 className="mt-2 text-2xl font-display font-extrabold uppercase tracking-tight text-foreground">
-                Creador visual premium
-              </h1>
-              <p className="mt-2 text-xs text-muted-foreground">Construye imagenes con precision, estilo y velocidad.</p>
-              <div className="mt-4 rounded-xl border border-border/20 bg-black/50 p-3">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-muted-foreground uppercase tracking-[0.15em] font-bold">Uso diario</span>
-                  <span className="text-primary font-bold">
-                    {Math.max(0, remainingToday)}/{dailyLimit}
-                  </span>
-                </div>
-                <div className="mt-2 h-2 rounded-full bg-surface overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-[linear-gradient(90deg,#8db100_0%,#d1fe17_60%,#eeffa1_100%)]"
-                    style={{ width: `${usagePercent}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 md:p-5 space-y-4">
-              {error && (
-                <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3">
-                  <p className="text-xs font-bold text-destructive">{error}</p>
-                </div>
-              )}
-
-              <label className="block space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                    Prompt principal
-                  </span>
-                  <div className="inline-flex items-center gap-2">
-                    <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                      {promptWordCount} palabras
-                    </span>
-                    <button
-                      type="button"
-                      onClick={resetPromptComposer}
-                      className="inline-flex items-center gap-1 rounded-lg border border-border/20 bg-surface px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-surface-hover hover:text-foreground"
-                    >
-                      <RotateCcw className="h-3 w-3" />
-                      Limpiar
-                    </button>
-                  </div>
-                </div>
-                <textarea
-                  value={prompt}
-                  onChange={(event) => setPrompt(event.target.value)}
-                  placeholder="Describe exactamente lo que quieres crear..."
-                  rows={6}
-                  className="w-full px-3 py-2 rounded-xl border border-border/30 bg-background text-sm text-foreground resize-none"
-                />
-                <div className="flex flex-wrap gap-1.5">
-                  {PROMPT_STARTERS.map((starter) => (
-                    <button
-                      key={starter}
-                      type="button"
-                      onClick={() => injectPromptStarter(starter)}
-                      className="px-2 py-1 rounded-lg bg-surface text-[10px] text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors"
-                    >
-                      + {starter.split(",")[0]}
-                    </button>
-                  ))}
-                </div>
-              </label>
-
-              <label className="block space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                  Negative Prompt
-                </span>
-                <textarea
-                  value={negativePrompt}
-                  onChange={(event) => setNegativePrompt(event.target.value)}
-                  placeholder="Elementos que no quieres (opcional)"
-                  rows={3}
-                  className="w-full px-3 py-2 rounded-xl border border-border/30 bg-background text-sm text-foreground resize-none"
-                />
-              </label>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label className="space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Modelo</span>
-                  <select
-                    value={selectedModel}
-                    onChange={(event) => setSelectedModel(event.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-border/30 bg-background text-sm text-foreground"
-                  >
-                    {models.map((model) => (
-                      <option key={model.modelKey} value={model.modelKey}>
-                        {model.displayName}
-                      </option>
-                    ))}
-                  </select>
-                  {selectedModelInfo?.description ? (
-                    <p className="mt-1 text-[10px] text-muted-foreground leading-relaxed">{selectedModelInfo.description}</p>
-                  ) : null}
-                </label>
-
-                <label className="space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                    Aspect Ratio
-                  </span>
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {ASPECTS.map((ratio) => (
-                      <button
-                        key={ratio}
-                        type="button"
-                        onClick={() => setSelectedAspect(ratio)}
-                        className={`px-2 py-2 rounded-lg text-[11px] font-bold transition-colors ${
-                          selectedAspect === ratio
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-surface text-muted-foreground hover:text-foreground hover:bg-surface-hover"
-                        }`}
-                      >
-                        {ratio}
-                      </button>
-                    ))}
-                  </div>
-                </label>
-              </div>
-
+      
+      <div className="pt-[72px] max-w-[1600px] mx-auto flex flex-col h-screen overflow-hidden">
+        
+        {/* COMMAND DECK SUPERIOR */}
+        <section className="bg-card/40 backdrop-blur-3xl border-b border-border/10 p-4 lg:p-6 z-20">
+          <div className="max-w-5xl mx-auto space-y-4">
+            
+            <div className="relative flex flex-col md:flex-row gap-2 bg-surface border border-border/20 rounded-2xl p-2 shadow-2xl focus-within:border-primary/40 transition-all duration-300">
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Visualiza tu próxima creación..."
+                className="flex-1 bg-transparent border-none px-4 py-3 text-sm focus:ring-0 resize-none h-12 md:h-auto placeholder:text-muted-foreground/20 font-medium"
+              />
               <button
-                type="button"
                 onClick={() => void createImage()}
-                disabled={loading || generating}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold uppercase tracking-wider disabled:opacity-60 hover:shadow-[0_0_28px_rgba(209,254,23,0.28)] transition-all"
+                disabled={generating || !prompt.trim()}
+                className="bg-primary text-black px-10 py-3 rounded-xl font-display font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale"
               >
-                {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-                {generating ? "Generando..." : "Generar imagen"}
+                {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                {generating ? "Generando" : "Generar"}
               </button>
+            </div>
 
-              <div className="rounded-xl border border-border/20 bg-surface/60 p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-[10px] uppercase tracking-[0.16em] font-bold text-muted-foreground">
-                    Guardar en tablero
-                  </p>
-                  <Link href="/boards" className="inline-flex items-center gap-1 text-[11px] text-primary font-bold">
-                    Administrar boards
-                    <ArrowRight className="w-3 h-3" />
-                  </Link>
-                </div>
-                <select
-                  value={selectedBoard}
-                  onChange={(event) => setSelectedBoard(event.target.value)}
-                  className="mt-2 w-full px-3 py-2 rounded-lg border border-border/30 bg-background text-sm text-foreground"
-                >
-                  {boards.length === 0 ? <option value="">No tienes tableros</option> : null}
-                  {boards.map((board) => (
-                    <option key={board.id} value={board.id}>
-                      {board.title} ({board.visibility})
-                    </option>
+            <div className="flex flex-wrap items-center justify-between gap-4 px-1">
+              <div className="flex items-center gap-2">
+                <div className="flex bg-surface/50 rounded-lg border border-border/10 p-1">
+                  {PROMPT_STARTERS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setPrompt(p => p ? `${p}, ${s}` : s)}
+                      className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors border-r last:border-none border-border/5"
+                    >
+                      {s}
+                    </button>
                   ))}
-                </select>
-                {selectedBoardTitle ? (
-                  <p className="mt-2 text-[11px] text-muted-foreground">
-                    Destino actual: <span className="text-foreground font-medium">{selectedBoardTitle}</span>
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          </section>
-
-          <section className="space-y-4 min-w-0">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              <StatPill icon={Layers3} label="Completadas" value={jobStats.completed} tone="primary" />
-              <StatPill icon={Clock3} label="En cola" value={jobStats.queued} tone="sky" />
-              <StatPill icon={Loader2} label="Procesando" value={jobStats.running} tone="amber" spinIcon />
-              <StatPill icon={AlertTriangle} label="Errores" value={jobStats.failed} tone="danger" />
-            </div>
-
-            <div className="rounded-2xl border border-border/20 bg-card p-4">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <Bot className="w-4 h-4 text-primary" />
-                  <p className="text-xs font-bold uppercase tracking-wider text-foreground">Generaciones recientes</p>
                 </div>
-                <Link
-                  href="/boards"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface text-[11px] text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors"
-                >
-                  Ir a boards
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Aqui ves toda tu actividad de generacion. Guarda resultados con un clic en el board destino.
-              </p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
-                  <Filter className="h-3.5 w-3.5" />
-                  Filtro
-                </span>
-                {JOB_FILTER_OPTIONS.map((option) => (
+
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                  <div className="flex items-center gap-2 bg-surface/30 px-3 py-1.5 rounded-full border border-border/5">
+                    <span className="text-primary">{remainingToday}/{dailyLimit}</span>
+                    <div className="w-10 h-1 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full bg-primary" style={{ width: `${usagePercent}%` }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* SELECTOR DE DESTINO - UI MEJORADA */}
+                <button 
+                  onClick={() => setIsBoardModalOpen(true)}
+                  className="flex items-center gap-3 bg-surface border border-border/20 hover:border-primary/40 px-4 py-2 rounded-xl transition-all group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
+                    <Save className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[8px] uppercase font-black text-muted-foreground tracking-tighter leading-none">Guardar en</p>
+                    <p className="text-[10px] font-bold uppercase text-foreground tracking-wider leading-tight max-w-[120px] truncate">
+                      {selectedBoard?.title || "Elegir Tablero"}
+                    </p>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ÁREA DE RESULTADOS */}
+        <section className="flex-1 overflow-y-auto p-4 lg:p-8 scrollbar-hide">
+          <div className="max-w-[1500px] mx-auto">
+            <AnimatePresence mode="popLayout">
+              {loading ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <div key={i} className="aspect-[9/16] rounded-[24px] bg-surface/30 animate-pulse border border-border/5" />
+                  ))}
+                </div>
+              ) : (
+                <motion.div 
+                  layout
+                  className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-8"
+                >
+                  {jobs.map((job) => (
+                    <ArtCard 
+                      key={job.id} 
+                      job={job} 
+                      onSave={() => void handleSaveToBoard(job.resultImage!.id)}
+                      isSaving={savingImageId === job.resultImage?.id}
+                    />
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </section>
+      </div>
+
+      {/* MODAL DE TABLEROS - REDISEÑADO PARA MÁXIMA PROFESIONALIDAD */}
+      <AnimatePresence>
+        {isBoardModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { setIsBoardModalOpen(false); setShowCreateInput(false); }}
+              className="absolute inset-0 bg-black/90 backdrop-blur-xl"
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-lg bg-card border border-border/20 rounded-[32px] shadow-[0_32px_128px_rgba(0,0,0,0.8)] overflow-hidden"
+            >
+              {/* Header */}
+              <div className="p-8 pb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-display font-black uppercase tracking-tighter text-foreground italic">Mis Colecciones</h3>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Organiza tu flujo creativo</p>
+                </div>
+                <button 
+                  onClick={() => setIsBoardModalOpen(false)} 
+                  className="w-10 h-10 flex items-center justify-center bg-surface border border-border/10 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Lista de Tableros con más prioridad visual */}
+              <div className="px-4 py-2 max-h-[400px] overflow-y-auto scrollbar-hide space-y-2">
+                {boards.length === 0 && !showCreateInput && (
+                  <div className="py-12 text-center opacity-20">
+                    <FolderPlus className="w-12 h-12 mx-auto mb-4" />
+                    <p className="text-[10px] uppercase font-black tracking-[0.3em]">Sin Tableros</p>
+                  </div>
+                )}
+                
+                {boards.map((board) => (
                   <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setJobFilter(option.value)}
-                    className={`rounded-lg px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] transition-colors ${
-                      jobFilter === option.value
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-surface text-muted-foreground hover:bg-surface-hover hover:text-foreground"
+                    key={board.id}
+                    onClick={() => { setSelectedBoardId(board.id); setIsBoardModalOpen(false); }}
+                    className={`w-full group flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 ${
+                      selectedBoardId === board.id 
+                        ? "bg-primary/10 border border-primary/30" 
+                        : "bg-surface/30 border border-border/5 hover:border-border/20 hover:bg-surface/60"
                     }`}
                   >
-                    {option.label}
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center border transition-colors ${
+                      selectedBoardId === board.id ? "bg-primary text-black border-primary" : "bg-background text-muted-foreground border-border/10 group-hover:border-primary/30 group-hover:text-primary"
+                    }`}>
+                      {board.visibility === 'private' ? <Lock className="w-5 h-5" /> : board.visibility === 'public' ? <Globe2 className="w-5 h-5" /> : <Users className="w-5 h-5" />}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className={`text-sm font-bold uppercase tracking-wide ${selectedBoardId === board.id ? "text-primary" : "text-foreground"}`}>
+                        {board.title}
+                      </p>
+                      <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest mt-0.5 opacity-60">
+                        {board.visibility}
+                      </p>
+                    </div>
+                    {selectedBoardId === board.id && (
+                      <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="w-3.5 h-3.5 text-black" />
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
-            </div>
 
-            {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {Array.from({ length: 6 }).map((_, index) => (
-                  <div key={index} className="aspect-[9/16] rounded-xl bg-surface animate-pulse" />
-                ))}
-              </div>
-            ) : filteredJobs.length === 0 ? (
-              <div className="rounded-2xl border border-border/20 bg-card p-8 text-center">
-                <Sparkles className="w-8 h-8 text-primary mx-auto mb-3" />
-                <p className="text-sm font-bold text-foreground uppercase tracking-wide">
-                  No hay resultados para este filtro
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Cambia el filtro o genera una nueva imagen para ver resultados aqui.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
-                {filteredJobs.map((job) => {
-                  const status = STATUS_META[job.status]
-                  const StatusIcon = status.icon
-                  const canSave = Boolean(job.resultImage && selectedBoard)
-
-                  return (
-                    <article key={job.id} className="group rounded-xl border border-border/20 bg-card overflow-hidden">
-                      <div className={`relative aspect-[9/16] bg-surface bg-gradient-to-b ${status.cardTone}`}>
-                        {job.resultImage ? (
-                          <img
-                            src={job.resultImage.url}
-                            alt={job.prompt}
-                            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                            {job.status === "running" ? (
-                              <Loader2 className="w-7 h-7 animate-spin text-amber-300" />
-                            ) : (
-                              <ImagePlus className="w-7 h-7" />
-                            )}
-                            <p className="text-[11px] font-bold uppercase tracking-wider">{status.label}</p>
-                          </div>
-                        )}
-
-                        <div className={`absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-[0.12em] backdrop-blur-sm ${status.tone}`}>
-                          <StatusIcon className={`w-3 h-3 ${status.spin ? "animate-spin" : ""}`} />
-                          {status.label}
+              {/* Acciones de Creación - UX Profesional */}
+              <div className="p-8 pt-4">
+                <AnimatePresence mode="wait">
+                  {!showCreateInput ? (
+                    <motion.button
+                      key="add-btn"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      onClick={() => setShowCreateInput(true)}
+                      className="w-full py-4 rounded-2xl border border-dashed border-border/20 hover:border-primary/40 hover:bg-primary/5 text-muted-foreground hover:text-primary flex items-center justify-center gap-3 transition-all duration-300 group"
+                    >
+                      <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em]">Crear Nueva Colección</span>
+                    </motion.button>
+                  ) : (
+                    <motion.div
+                      key="input-area"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      className="space-y-4"
+                    >
+                      <div className="relative">
+                        <input
+                          autoFocus
+                          type="text"
+                          value={newBoardTitle}
+                          onChange={(e) => setNewBoardTitle(e.target.value)}
+                          placeholder="Nombre de la colección..."
+                          className="w-full bg-surface border border-primary/30 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all pr-32"
+                          onKeyDown={(e) => e.key === 'Enter' && void createQuickBoard()}
+                        />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                           <button 
+                             onClick={() => setShowCreateInput(false)}
+                             className="px-3 py-2 text-[9px] font-black uppercase text-muted-foreground hover:text-foreground"
+                           >
+                             Cancelar
+                           </button>
+                           <button 
+                             onClick={() => void createQuickBoard()}
+                             disabled={!newBoardTitle.trim() || isCreatingBoard}
+                             className="bg-primary text-black px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest disabled:opacity-30"
+                           >
+                             {isCreatingBoard ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Crear"}
+                           </button>
                         </div>
                       </div>
-
-                      <div className="p-2.5 space-y-2">
-                        <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-[0.15em] truncate">
-                          {job.providerKey} | {job.modelKey}
-                        </p>
-                        <p className="text-[11px] text-foreground line-clamp-2">{job.prompt}</p>
-                        <button
-                          type="button"
-                          onClick={() => (job.resultImage ? void saveToBoard(job.resultImage.id) : undefined)}
-                          disabled={!canSave || (job.resultImage ? savingImageId === job.resultImage.id : false)}
-                          className="w-full inline-flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-surface text-foreground hover:bg-primary hover:text-primary-foreground text-[11px] font-bold uppercase tracking-wider transition-colors disabled:opacity-60"
-                        >
-                          <Save className="w-3.5 h-3.5" />
-                          {job.resultImage && savingImageId === job.resultImage.id
-                            ? "Guardando..."
-                            : canSave
-                              ? "Guardar idea"
-                              : "Sin resultado"}
-                        </button>
-                      </div>
-                    </article>
-                  )
-                })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            )}
-          </section>
-        </div>
-      </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </main>
   )
 }
 
-function StatPill(props: {
-  icon: LucideIcon
-  label: string
-  value: number
-  tone: "primary" | "sky" | "amber" | "danger"
-  spinIcon?: boolean
+function ArtCard({ job, onSave, isSaving }: { 
+  job: GenerationJobItem, 
+  onSave: () => void, 
+  isSaving: boolean
 }) {
-  const Icon = props.icon
-  const toneClass =
-    props.tone === "primary"
-      ? "text-primary border-primary/30 bg-primary/10"
-      : props.tone === "sky"
-        ? "text-sky-300 border-sky-500/30 bg-sky-500/10"
-        : props.tone === "amber"
-          ? "text-amber-300 border-amber-500/30 bg-amber-500/10"
-          : "text-destructive border-destructive/30 bg-destructive/10"
+  const isSucceeded = job.status === "succeeded"
+  const isFailed = job.status === "failed"
 
   return (
-    <div className={`rounded-xl border p-3 ${toneClass}`}>
-      <div className="flex items-center gap-2">
-        <Icon className={`w-4 h-4 ${props.spinIcon ? "animate-spin" : ""}`} />
-        <p className="text-[10px] uppercase tracking-[0.14em] font-bold">{props.label}</p>
+    <motion.article
+      layout
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="group relative"
+    >
+      <div className="relative aspect-[9/16] rounded-[28px] overflow-hidden bg-surface border border-border/10 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:border-primary/50 group-hover:shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
+        
+        {job.resultImage ? (
+          <>
+            <img
+              src={job.resultImage.url}
+              alt={job.prompt}
+              className="w-full h-full object-cover transition-all duration-1000 ease-out group-hover:scale-110 group-hover:brightness-[0.4] group-hover:blur-[2px]"
+            />
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center p-8 text-center">
+              <div className="absolute top-8 left-8 right-8">
+                 <div className="w-8 h-px bg-primary/30 mx-auto mb-4" />
+                 <p className="text-[10px] text-white/90 font-medium italic line-clamp-6 leading-relaxed tracking-wider">
+                  "{job.prompt}"
+                 </p>
+                 <div className="w-8 h-px bg-primary/30 mx-auto mt-4" />
+              </div>
+              
+              <button
+                onClick={onSave}
+                disabled={isSaving}
+                className="mt-20 bg-primary text-black px-10 py-4 rounded-full text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-3 hover:bg-white hover:scale-105 active:scale-95 transition-all shadow-[0_10px_30px_rgba(209,254,23,0.3)]"
+              >
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {isSaving ? "Guardando" : "Guardar"}
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/80 backdrop-blur-sm">
+            {!isFailed ? (
+              <div className="flex flex-col items-center gap-6">
+                 <div className="relative w-16 h-16">
+                    <div className="absolute inset-0 border-[3px] border-primary/10 rounded-full" />
+                    <div className="absolute inset-0 border-[3px] border-primary border-t-transparent rounded-full animate-spin" />
+                 </div>
+                 <span className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/40 animate-pulse ml-2">Revelando</span>
+              </div>
+            ) : (
+              <div className="text-center p-8">
+                <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-destructive/20">
+                  <X className="w-6 h-6 text-destructive/40" />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-destructive/40">Fallo de Motor</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      <p className="mt-2 text-xl font-display font-extrabold leading-none">{props.value}</p>
-    </div>
+    </motion.article>
   )
 }

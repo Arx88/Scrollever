@@ -2,21 +2,43 @@
 
 import { useRef, useState, useEffect, useCallback } from "react"
 import { categories } from "@/lib/image-data"
+import { FEED_VIEW_OPTIONS, type FeedViewMode } from "@/lib/feed-view"
 
 interface CategoryBarProps {
   activeCategory: string
+  activeFeedView: FeedViewMode
   onCategoryChange: (category: string) => void
+  onFeedViewChange: (mode: FeedViewMode) => void
 }
 
 function TickerSet({
   activeCategory,
+  activeFeedView,
   onCategoryChange,
+  onFeedViewChange,
 }: {
   activeCategory: string
+  activeFeedView: FeedViewMode
   onCategoryChange: (category: string) => void
+  onFeedViewChange: (mode: FeedViewMode) => void
 }) {
   return (
     <>
+      {FEED_VIEW_OPTIONS.map((option, i) => (
+        <button
+          key={`feed-${option.key}-${i}`}
+          onClick={() => onFeedViewChange(option.key)}
+          className={`shrink-0 py-2.5 px-3 md:px-4 font-display font-extrabold text-[13px] md:text-sm uppercase tracking-wide transition-colors whitespace-nowrap ${
+            activeFeedView === option.key
+              ? "text-primary-foreground"
+              : "text-primary-foreground/55 hover:text-primary-foreground/80"
+          }`}
+        >
+          {option.label}
+          <span className="ml-3 md:ml-4 text-primary-foreground/25 font-sans select-none">/</span>
+        </button>
+      ))}
+
       {categories.map((category, i) => (
         <button
           key={`${category}-${i}`}
@@ -35,12 +57,17 @@ function TickerSet({
   )
 }
 
-export function CategoryBar({ activeCategory, onCategoryChange }: CategoryBarProps) {
+export function CategoryBar({
+  activeCategory,
+  activeFeedView,
+  onCategoryChange,
+  onFeedViewChange,
+}: CategoryBarProps) {
   const trackRef = useRef<HTMLDivElement>(null)
   const [paused, setPaused] = useState(false)
   const rafRef = useRef<number>(0)
   const offsetRef = useRef(0)
-  const speed = 0.5 // px per frame
+  const speed = 0.5
 
   const tick = useCallback(() => {
     const track = trackRef.current
@@ -73,9 +100,24 @@ export function CategoryBar({ activeCategory, onCategoryChange }: CategoryBarPro
     >
       <div className="bg-primary">
         <div ref={trackRef} className="flex items-center will-change-transform w-max">
-          <TickerSet activeCategory={activeCategory} onCategoryChange={onCategoryChange} />
-          <TickerSet activeCategory={activeCategory} onCategoryChange={onCategoryChange} />
-          <TickerSet activeCategory={activeCategory} onCategoryChange={onCategoryChange} />
+          <TickerSet
+            activeCategory={activeCategory}
+            activeFeedView={activeFeedView}
+            onCategoryChange={onCategoryChange}
+            onFeedViewChange={onFeedViewChange}
+          />
+          <TickerSet
+            activeCategory={activeCategory}
+            activeFeedView={activeFeedView}
+            onCategoryChange={onCategoryChange}
+            onFeedViewChange={onFeedViewChange}
+          />
+          <TickerSet
+            activeCategory={activeCategory}
+            activeFeedView={activeFeedView}
+            onCategoryChange={onCategoryChange}
+            onFeedViewChange={onFeedViewChange}
+          />
         </div>
       </div>
     </div>

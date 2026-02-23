@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
+import { createServiceClient, isServiceClientConfigured } from "@/lib/supabase/service"
 
 const createBoardSchema = z.object({
   title: z.string().trim().min(2).max(80),
@@ -136,21 +137,99 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { data: board, error } = await supabase
+  const boardInsert = {
+    owner_id: userId,
+    title: payload.title,
+    description: payload.description ?? null,
+    visibility: payload.visibility,
+    cover_image_id: payload.coverImageId ?? null,
+  }
+
+  let board: {
+    id: string
+    owner_id: string
+    title: string
+    description: string | null
+    visibility: "public" | "private" | "collab"
+    cover_image_id: string | null
+    created_at: string
+    updated_at: string
+  } | null = null
+  let createError: { code?: string; message?: string } | null = null
+  let writerClient = supabase
+
+  const initialCreate = await supabase
     .from("boards")
-    .insert({
-      owner_id: userId,
-      title: payload.title,
-      description: payload.description ?? null,
-      visibility: payload.visibility,
-      cover_image_id: payload.coverImageId ?? null,
-    })
+    .insert(boardInsert)
     .select("id,owner_id,title,description,visibility,cover_image_id,created_at,updated_at")
     .single()
 
-  if (error || !board) {
-    console.error("[boards] create_error", error)
-    return NextResponse.json({ error: "Failed to create board" }, { status: 500 })
+  board = initialCreate.data
+  createError = initialCreate.error
+
+  const shouldTryServiceFallback =
+    !board &&
+    createError?.code === "42501" &&
+    isServiceClientConfigured()
+
+  if (shouldTryServiceFallback) {
+    const serviceClient = createServiceClient()
+    writerClient = serviceClient
+
+    // Ensure profile exists in projects where signup trigger was not yet applied.
+    const { data: profileRow } = await serviceClient
+      .from("profiles")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle()
+
+    if (!profileRow) {
+      await serviceClient
+        .from("profiles")
+        .upsert(
+          {
+            id: userId,
+            username: authData.user.email?.split("@")[0] ?? null,
+          },
+          { onConflict: "id" }
+        )
+    }
+
+    const { count: serviceCount } = await serviceClient
+      .from("boards")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", userId)
+
+    if ((serviceCount ?? 0) >= maxBoards) {
+      return NextResponse.json(
+        {
+          error: "Boards limit reached",
+          code: "BOARDS_LIMIT_REACHED",
+          maxBoards,
+        },
+        { status: 429 }
+      )
+    }
+
+    const serviceCreate = await serviceClient
+      .from("boards")
+      .insert(boardInsert)
+      .select("id,owner_id,title,description,visibility,cover_image_id,created_at,updated_at")
+      .single()
+
+    board = serviceCreate.data
+    createError = serviceCreate.error
+  }
+
+  if (!board) {
+    console.error("[boards] create_error", createError)
+    return NextResponse.json(
+      {
+        error: "Failed to create board",
+        code: createError?.code ?? "UNKNOWN",
+      },
+      { status: 500 }
+    )
   }
 
   if (payload.visibility === "collab" && payload.collaboratorUserIds?.length) {
@@ -163,7 +242,7 @@ export async function POST(request: NextRequest) {
         user_id: collaboratorId,
         role: "editor",
       }))
-      await supabase.from("board_members").upsert(memberships, { onConflict: "board_id,user_id" })
+      await writerClient.from("board_members").upsert(memberships, { onConflict: "board_id,user_id" })
     }
   }
 

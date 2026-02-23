@@ -1,3 +1,5 @@
+import { getDefaultSettingValue } from "@/lib/admin/config-catalog"
+
 export interface AIImage {
   id: string
   src: string
@@ -13,6 +15,11 @@ export interface AIImage {
   hoursLeft: number
   isSurvivor: boolean
   isHallOfFame: boolean
+  rankToday?: number | null
+  cutoffPosition?: number | null
+  cohortSize?: number | null
+  willSurvive?: boolean | null
+  cohortDate?: string | null
   userLiked?: boolean
   userSuperliked?: boolean
   expiresAt?: string
@@ -33,6 +40,12 @@ export interface ApiImage {
   is_hall_of_fame: boolean
   created_at: string
   expires_at: string
+  rank_today?: number | null
+  cutoff_position?: number | null
+  cohort_size?: number | null
+  will_survive?: boolean | null
+  cohort_date?: string | null
+  likes_needed?: number | null
   author?: string
   profiles?: { username?: string | null } | Array<{ username?: string | null }>
   user_liked?: boolean
@@ -51,6 +64,23 @@ export const categories = [
 ]
 
 export const aiImages: AIImage[] = []
+const MIN_SURVIVAL_LIKES_NEEDED = 1
+
+const FALLBACK_SURVIVAL_LIKES_NEEDED = (() => {
+  const value = getDefaultSettingValue("survival.likes_needed_default")
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return Math.max(MIN_SURVIVAL_LIKES_NEEDED, Math.floor(value))
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return Math.max(MIN_SURVIVAL_LIKES_NEEDED, Math.floor(parsed))
+    }
+  }
+
+  return MIN_SURVIVAL_LIKES_NEEDED
+})()
 
 function resolveAspectRatio(_width: number | null, _height: number | null): "tall" | "wide" | "square" {
   // All images are displayed in 9:16 portrait format
@@ -75,6 +105,10 @@ export function mapApiImageToAIImage(image: ApiImage, nowMs = Date.now()): AIIma
   const hoursLeft = image.is_immortal
     ? 0
     : Math.max(0, Math.ceil((expiresAtMs - nowMs) / (1000 * 60 * 60)))
+  const likesNeeded =
+    typeof image.likes_needed === "number" && Number.isFinite(image.likes_needed) && image.likes_needed > 0
+      ? image.likes_needed
+      : FALLBACK_SURVIVAL_LIKES_NEEDED
 
   return {
     id: image.id,
@@ -82,7 +116,7 @@ export function mapApiImageToAIImage(image: ApiImage, nowMs = Date.now()): AIIma
     prompt: image.prompt ?? image.title ?? "",
     model: "Scrollever",
     likes: image.like_count,
-    likesNeeded: 5000,
+    likesNeeded,
     superlikes: image.superlike_count,
     author: resolveAuthor(image),
     category: image.category,
@@ -91,6 +125,11 @@ export function mapApiImageToAIImage(image: ApiImage, nowMs = Date.now()): AIIma
     hoursLeft,
     isSurvivor: image.is_immortal,
     isHallOfFame: image.is_hall_of_fame,
+    rankToday: image.rank_today ?? null,
+    cutoffPosition: image.cutoff_position ?? null,
+    cohortSize: image.cohort_size ?? null,
+    willSurvive: image.will_survive ?? null,
+    cohortDate: image.cohort_date ?? null,
     userLiked: Boolean(image.user_liked),
     userSuperliked: Boolean(image.user_superliked),
     expiresAt: image.expires_at,

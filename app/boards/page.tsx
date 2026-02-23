@@ -9,10 +9,12 @@ import {
   Globe2,
   LayoutGrid,
   Lock,
+  Pencil,
   Plus,
   Save,
   Search,
   SlidersHorizontal,
+  Trash2,
   Users,
   X,
 } from "lucide-react"
@@ -70,7 +72,14 @@ export default function BoardsPage() {
   const [browseScope, setBrowseScope] = useState<(typeof BROWSE_SCOPE_FILTERS)[number]["value"]>("all")
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
+  const [updatingBoard, setUpdatingBoard] = useState(false)
+  const [deletingBoard, setDeletingBoard] = useState(false)
   const [savingImageId, setSavingImageId] = useState<string | null>(null)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [editTitle, setEditTitle] = useState("")
+  const [editDescription, setEditDescription] = useState("")
+  const [editVisibility, setEditVisibility] = useState<"public" | "private" | "collab">("private")
   const [error, setError] = useState<string | null>(null)
 
   const editableBoards = useMemo(() => boards.filter((board) => board.canEdit), [boards])
@@ -185,10 +194,11 @@ export default function BoardsPage() {
           visibility,
         }),
       })
-      const payload = (await response.json()) as { item?: BoardCard; error?: string }
+      const payload = (await response.json()) as { item?: BoardCard; error?: string; code?: string }
 
       if (!response.ok || !payload.item) {
-        throw new Error(payload.error ?? "create_board_failed")
+        const errorCode = payload.code ? ` (${payload.code})` : ""
+        throw new Error((payload.error ?? "create_board_failed") + errorCode)
       }
 
       setBoards((prev) => [payload.item!, ...prev])
@@ -239,6 +249,99 @@ export default function BoardsPage() {
       setError(err instanceof Error ? err.message : "No se pudo guardar la imagen")
     } finally {
       setSavingImageId(null)
+    }
+  }
+
+  const openEditModal = (board: BoardCard) => {
+    if (!board.canEdit) {
+      return
+    }
+    setError(null)
+    setEditTitle(board.title)
+    setEditDescription(board.description ?? "")
+    setEditVisibility(board.visibility)
+    setEditModalOpen(true)
+  }
+
+  const updateSelectedBoard = async () => {
+    const board = selectedBoard
+    if (!board || !board.canEdit) {
+      return
+    }
+
+    if (editTitle.trim().length < 2) {
+      setError("El tablero necesita un titulo")
+      return
+    }
+
+    setUpdatingBoard(true)
+    setError(null)
+    try {
+      const response = await fetch(`/api/boards/${board.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          description: editDescription.trim() ? editDescription.trim() : null,
+          visibility: editVisibility,
+        }),
+      })
+      const payload = (await response.json()) as { error?: string; code?: string }
+      if (!response.ok) {
+        const errorCode = payload.code ? ` (${payload.code})` : ""
+        throw new Error((payload.error ?? "update_board_failed") + errorCode)
+      }
+
+      setBoards((prev) =>
+        prev.map((item) =>
+          item.id === board.id
+            ? {
+                ...item,
+                title: editTitle.trim(),
+                description: editDescription.trim() ? editDescription.trim() : null,
+                visibility: editVisibility,
+              }
+            : item
+        )
+      )
+      setEditModalOpen(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo actualizar el tablero")
+    } finally {
+      setUpdatingBoard(false)
+    }
+  }
+
+  const deleteSelectedBoard = async () => {
+    const board = selectedBoard
+    if (!board || !board.canEdit) {
+      return
+    }
+
+    setDeletingBoard(true)
+    setError(null)
+    try {
+      const response = await fetch(`/api/boards/${board.id}`, {
+        method: "DELETE",
+      })
+      const payload = (await response.json()) as { ok?: boolean; error?: string; code?: string }
+      if (!response.ok || !payload.ok) {
+        const errorCode = payload.code ? ` (${payload.code})` : ""
+        throw new Error((payload.error ?? "delete_board_failed") + errorCode)
+      }
+
+      setBoards((prev) => {
+        const next = prev.filter((item) => item.id !== board.id)
+        const nextSelectedId = next.find((item) => item.canEdit)?.id ?? next[0]?.id ?? ""
+        setSelectedBoardId(nextSelectedId)
+        return next
+      })
+      setEditModalOpen(false)
+      setDeleteModalOpen(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo eliminar el tablero")
+    } finally {
+      setDeletingBoard(false)
     }
   }
 
@@ -383,7 +486,7 @@ export default function BoardsPage() {
                       {selectedBoard.canEdit ? "Editable" : "Solo lectura"}
                     </span>
                   </div>
-                  <div className="mt-4">
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
                     <Link
                       href={`/boards/${selectedBoard.id}`}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-surface px-3 py-2 text-xs font-bold uppercase tracking-wider text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
@@ -391,6 +494,26 @@ export default function BoardsPage() {
                       Abrir tablero
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
+                    {selectedBoard.canEdit ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(selectedBoard)}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-surface px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-surface-hover hover:text-foreground"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteModalOpen(true)}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-bold uppercase tracking-wider text-destructive transition-colors hover:bg-destructive/20"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Eliminar
+                        </button>
+                      </>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -542,6 +665,142 @@ export default function BoardsPage() {
               )}
             </div>
           </section>
+
+          {editModalOpen && selectedBoard ? (
+            <div className="fixed inset-0 z-[91] bg-black/70 backdrop-blur-sm p-4 md:p-6">
+              <div className="mx-auto mt-[8vh] w-full max-w-2xl rounded-2xl border border-border/30 bg-card shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+                <div className="flex items-center justify-between border-b border-border/10 p-4 md:p-5">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Editar tablero</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Ajusta nombre, descripcion y privacidad.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditModalOpen(false)}
+                    className="rounded-lg bg-surface p-2 text-muted-foreground transition-colors hover:bg-surface-hover hover:text-foreground"
+                    aria-label="Cerrar"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-4 p-4 md:p-5">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                      Nombre
+                    </label>
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(event) => setEditTitle(event.target.value)}
+                      placeholder="Nombre del tablero"
+                      className="w-full rounded-xl border border-border/30 bg-background px-3 py-2.5 text-sm text-foreground"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                      Descripcion
+                    </label>
+                    <textarea
+                      value={editDescription}
+                      onChange={(event) => setEditDescription(event.target.value)}
+                      placeholder="Descripcion corta (opcional)"
+                      rows={3}
+                      className="w-full resize-none rounded-xl border border-border/30 bg-background px-3 py-2.5 text-sm text-foreground"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Visibilidad</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {VISIBILITY_OPTIONS.map((option) => {
+                        const Icon = option.icon
+                        const active = editVisibility === option.value
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setEditVisibility(option.value)}
+                            className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-[11px] font-bold uppercase tracking-wide transition-colors ${
+                              active
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-surface text-muted-foreground hover:bg-surface-hover hover:text-foreground"
+                            }`}
+                          >
+                            <Icon className="h-3.5 w-3.5" />
+                            {option.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/10 p-4 md:p-5">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-bold uppercase tracking-wider text-destructive transition-colors hover:bg-destructive/20"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Eliminar tablero
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditModalOpen(false)}
+                      className="rounded-lg bg-surface px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-surface-hover hover:text-foreground"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void updateSelectedBoard()}
+                      disabled={updatingBoard}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground transition-all hover:shadow-[0_0_24px_rgba(209,254,23,0.25)] disabled:opacity-60"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      {updatingBoard ? "Guardando..." : "Guardar cambios"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {deleteModalOpen && selectedBoard ? (
+            <div className="fixed inset-0 z-[92] bg-black/75 backdrop-blur-sm p-4 md:p-6">
+              <div className="mx-auto mt-[14vh] w-full max-w-md rounded-2xl border border-destructive/30 bg-card shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+                <div className="border-b border-border/10 p-4 md:p-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-destructive">Eliminar tablero</p>
+                  <p className="mt-2 text-sm text-foreground">
+                    Vas a eliminar <span className="font-bold">{selectedBoard.title}</span>. Esta accion no se puede deshacer.
+                  </p>
+                </div>
+                <div className="flex items-center justify-end gap-2 p-4 md:p-5">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteModalOpen(false)}
+                    className="rounded-lg bg-surface px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-surface-hover hover:text-foreground"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void deleteSelectedBoard()}
+                    disabled={deletingBoard}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-destructive px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-60"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {deletingBoard ? "Eliminando..." : "Eliminar"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           {createModalOpen ? (
             <div className="fixed inset-0 z-[90] bg-black/70 backdrop-blur-sm p-4 md:p-6">

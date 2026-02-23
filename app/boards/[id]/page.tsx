@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { ArrowLeft, Globe2, Lock, Trash2, Users } from "lucide-react"
 
@@ -31,11 +31,13 @@ interface BoardImageItem {
 
 export default function BoardDetailPage() {
   const params = useParams<{ id: string }>()
+  const router = useRouter()
   const boardId = params.id
   const [board, setBoard] = useState<BoardDetails | null>(null)
   const [items, setItems] = useState<BoardImageItem[]>([])
   const [loading, setLoading] = useState(true)
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null)
+  const [deletingBoard, setDeletingBoard] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -100,6 +102,33 @@ export default function BoardDetailPage() {
     }
   }
 
+  const deleteBoard = async () => {
+    if (!board?.canEdit) {
+      return
+    }
+
+    const confirmed = window.confirm(`Eliminar tablero "${board.title}"? Esta accion no se puede deshacer.`)
+    if (!confirmed) {
+      return
+    }
+
+    setDeletingBoard(true)
+    setError(null)
+    try {
+      const response = await fetch(`/api/boards/${boardId}`, { method: "DELETE" })
+      const payload = (await response.json()) as { ok?: boolean; error?: string; code?: string }
+      if (!response.ok || !payload.ok) {
+        const errorCode = payload.code ? ` (${payload.code})` : ""
+        throw new Error((payload.error ?? "No se pudo eliminar el tablero") + errorCode)
+      }
+      router.push("/boards")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo eliminar el tablero")
+    } finally {
+      setDeletingBoard(false)
+    }
+  }
+
   const visibilityIcon = board?.visibility === "public"
     ? <Globe2 className="w-3.5 h-3.5" />
     : board?.visibility === "private"
@@ -155,6 +184,19 @@ export default function BoardDetailPage() {
                     {board.visibility}
                   </span>
                 </div>
+                {board.canEdit ? (
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      onClick={() => void deleteBoard()}
+                      disabled={deletingBoard}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-bold uppercase tracking-wider text-destructive transition-colors hover:bg-destructive/20 disabled:opacity-60"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      {deletingBoard ? "Eliminando..." : "Eliminar tablero"}
+                    </button>
+                  </div>
+                ) : null}
               </section>
 
               <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">

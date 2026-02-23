@@ -55,3 +55,452 @@
 ⚠ Fast Refresh had to perform a full reload due to a runtime error.
 ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
 ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[api/images] ranking_error {
+  code: 'PGRST202',
+  details: 'Searched for the function public.get_live_ranking without parameters or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
+  hint: null,
+  message: 'Could not find the function public.get_live_ranking without parameters in the schema cache'
+}
+[api/images] ranking_error {
+  code: 'PGRST202',
+  details: 'Searched for the function public.get_live_ranking without parameters or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
+  hint: null,
+  message: 'Could not find the function public.get_live_ranking without parameters in the schema cache'
+}
+[api/images] ranking_error {
+  code: 'PGRST202',
+  details: 'Searched for the function public.get_live_ranking without parameters or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
+  hint: null,
+  message: 'Could not find the function public.get_live_ranking without parameters in the schema cache'
+}
+[api/images] ranking_error {
+  code: 'PGRST202',
+  details: 'Searched for the function public.get_live_ranking without parameters or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
+  hint: null,
+  message: 'Could not find the function public.get_live_ranking without parameters in the schema cache'
+}
+⨯ ./components/category-bar.tsx
+Error: 
+
+Caused by:
+    0: Failed to read source code from C:\Users\juanp\Desktop\ACIDO\Everscroll\Scrollever\components\category-bar.tsx
+    1: El sistema no puede encontrar el archivo especificado. (os error 2)
+
+Import trace for requested module:
+./components/category-bar.tsx
+./app/page.tsx
+⨯ ./components/category-bar.tsx
+Error: 
+
+Caused by:
+    0: Failed to read source code from C:\Users\juanp\Desktop\ACIDO\Everscroll\Scrollever\components\category-bar.tsx
+    1: El sistema no puede encontrar el archivo especificado. (os error 2)
+
+Import trace for requested module:
+./components/category-bar.tsx
+./app/page.tsx
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[notifications] list_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.user_notifications' in the schema cache"
+}
+[analytics] track_event_error {
+  eventName: 'session_started',
+  eventId: '33ab2b97-c018-49e3-b040-70197cecc83f',
+  code: 'PGRST205',
+  message: "Could not find the table 'public.product_events' in the schema cache"
+}
+[analytics] track_event_error {
+  eventName: 'session_started',
+  eventId: '4edde31a-fb71-4c43-aa1b-7ef16358983f',
+  code: 'PGRST205',
+  message: "Could not find the table 'public.product_events' in the schema cache"
+}
+[analytics] track_event_error {
+  eventName: 'page_view',
+  eventId: '2f27959b-26ab-4ab9-a8b3-14622bbed32d',
+  code: 'PGRST205',
+  message: "Could not find the table 'public.product_events' in the schema cache"
+}
+[analytics] track_event_error {
+  eventName: 'page_view',
+  eventId: '52d86431-8a4a-488b-be6e-dcd8ea5521cc',
+  code: 'PGRST205',
+  message: "Could not find the table 'public.product_events' in the schema cache"
+}
+[analytics/identify] identity_link_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.identity_links' in the schema cache"
+}
+[analytics/identify] identity_link_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.identity_links' in the schema cache"
+}
+⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[analytics] track_event_error {
+  eventName: 'page_view',
+  eventId: '5f86c8c1-63df-441e-be4e-edfcbbc29710',
+  code: 'PGRST205',
+  message: "Could not find the table 'public.product_events' in the schema cache"
+}
+[analytics/identify] identity_link_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.identity_links' in the schema cache"
+}
+[analytics] track_event_error {
+  eventName: 'page_view',
+  eventId: '26bb6b61-5065-4901-af33-2fb435680efd',
+  code: 'PGRST205',
+  message: "Could not find the table 'public.product_events' in the schema cache"
+}
+[analytics/identify] identity_link_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.identity_links' in the schema cache"
+}
+[analytics] track_event_error {
+  eventName: 'page_view',
+  eventId: '768fe2a1-bb35-4c13-8780-5c8e5cfab012',
+  code: 'PGRST205',
+  message: "Could not find the table 'public.product_events' in the schema cache"
+}
+[analytics/identify] identity_link_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.identity_links' in the schema cache"
+}
+[analytics] track_event_error {
+  eventName: 'page_view',
+  eventId: '3fa3f3b9-b7e5-423d-bef9-ae40f8c4bf47',
+  code: 'PGRST205',
+  message: "Could not find the table 'public.product_events' in the schema cache"
+}
+[analytics/identify] identity_link_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.identity_links' in the schema cache"
+}
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[analytics] track_event_error {
+  eventName: 'page_view',
+  eventId: '23a27600-3e26-4f58-abc5-15af3a5bcce9',
+  code: 'PGRST205',
+  message: "Could not find the table 'public.product_events' in the schema cache"
+}
+[analytics/identify] identity_link_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.identity_links' in the schema cache"
+}
+[analytics] track_event_error {
+  eventName: 'page_view',
+  eventId: '55e28114-afef-4583-8093-ad711f08baf2',
+  code: 'PGRST205',
+  message: "Could not find the table 'public.product_events' in the schema cache"
+}
+[analytics/identify] identity_link_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.identity_links' in the schema cache"
+}
+[analytics/identify] identity_link_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.identity_links' in the schema cache"
+}
+[analytics] track_event_error {
+  eventName: 'page_view',
+  eventId: '978443f1-40df-42e5-9911-49082507f65e',
+  code: 'PGRST205',
+  message: "Could not find the table 'public.product_events' in the schema cache"
+}
+[analytics] track_event_error {
+  eventName: 'page_view',
+  eventId: 'e509b26d-d475-4903-aa14-9f9697f961be',
+  code: 'PGRST205',
+  message: "Could not find the table 'public.product_events' in the schema cache"
+}
+[analytics/identify] identity_link_error {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.moderation_actions'",
+  message: "Could not find the table 'public.identity_links' in the schema cache"
+}
+[admin/stats] generated_engagement_summary_error {
+  code: 'PGRST202',
+  details: 'Searched for the function public.get_generated_engagement_summary_window with parameters p_since, p_until or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
+  hint: 'Perhaps you meant to call the function public.get_analytics_window_summary',
+  message: 'Could not find the function public.get_generated_engagement_summary_window(p_since, p_until) in the schema cache'
+}
+[admin/stats] generated_creator_stats_error {
+  code: 'PGRST202',
+  details: 'Searched for the function public.get_generated_creator_stats_window with parameters p_limit, p_since, p_until or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
+  hint: 'Perhaps you meant to call the function public.get_retention_snapshot',
+  message: 'Could not find the function public.get_generated_creator_stats_window(p_limit, p_since, p_until) in the schema cache'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[admin/stats] generated_engagement_summary_error {
+  code: 'PGRST202',
+  details: 'Searched for the function public.get_generated_engagement_summary_window with parameters p_since, p_until or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
+  hint: 'Perhaps you meant to call the function public.get_analytics_window_summary',
+  message: 'Could not find the function public.get_generated_engagement_summary_window(p_since, p_until) in the schema cache'
+}
+[admin/stats] generated_creator_stats_error {
+  code: 'PGRST202',
+  details: 'Searched for the function public.get_generated_creator_stats_window with parameters p_limit, p_since, p_until or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
+  hint: 'Perhaps you meant to call the function public.get_retention_snapshot',
+  message: 'Could not find the function public.get_generated_creator_stats_window(p_limit, p_since, p_until) in the schema cache'
+}
+[admin/stats] generated_engagement_summary_error {
+  code: 'PGRST202',
+  details: 'Searched for the function public.get_generated_engagement_summary_window with parameters p_since, p_until or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
+  hint: 'Perhaps you meant to call the function public.get_analytics_window_summary',
+  message: 'Could not find the function public.get_generated_engagement_summary_window(p_since, p_until) in the schema cache'
+}
+[admin/stats] generated_creator_stats_error {
+  code: 'PGRST202',
+  details: 'Searched for the function public.get_generated_creator_stats_window with parameters p_limit, p_since, p_until or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
+  hint: 'Perhaps you meant to call the function public.get_retention_snapshot',
+  message: 'Could not find the function public.get_generated_creator_stats_window(p_limit, p_since, p_until) in the schema cache'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[analytics/identify] identity_link_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy (USING expression) for table "identity_links"'
+}
+[boards] create_error {
+  code: '42501',
+  details: null,
+  hint: null,
+  message: 'new row violates row-level security policy for table "boards"'
+}

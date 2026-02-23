@@ -4,6 +4,12 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { SupabaseClient, User as SupabaseUser } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
 import { normalizeRole, type AppRole } from "@/lib/admin/roles"
+import {
+  getOrCreateAnonymousId,
+  getOrCreateSessionId,
+  resolveSourceFromLocation,
+  trackClientEvent,
+} from "@/lib/analytics/browser"
 
 export interface User {
   id: string
@@ -141,6 +147,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!supabase) {
         return { error: MISSING_ENV_ERROR }
       }
+
+      const anonymousId = getOrCreateAnonymousId()
+      const sessionId = getOrCreateSessionId()
+      void trackClientEvent({
+        eventName: "signup_started",
+        anonymousId,
+        sessionId,
+        source: resolveSourceFromLocation(),
+        path: "/auth/sign-up",
+        referrer: document.referrer || null,
+        metadata: {
+          hasUsername: username.trim().length > 0,
+        },
+      })
 
       const redirectBase = typeof window !== "undefined" ? window.location.origin : undefined
 

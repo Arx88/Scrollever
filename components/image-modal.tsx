@@ -72,6 +72,8 @@ export function ImageModal({ image, onClose }: ImageModalProps) {
   const superliked = isSuperliked(image.id)
   const likeCount = image.likes + getLikeCount(image.id)
   const superlikeCount = image.superlikes + getSuperlikeCount(image.id)
+  const hasLiveRanking = typeof image.rankToday === "number" && typeof image.cutoffPosition === "number"
+  const effectiveLikesNeeded = Math.max(1, image.likesNeeded)
 
   const handleLike = async () => {
     if (!user) {
@@ -111,9 +113,9 @@ export function ImageModal({ image, onClose }: ImageModalProps) {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const survivalProgress = Math.min((likeCount / image.likesNeeded) * 100, 100)
-  const isSafe = image.isSurvivor || survivalProgress >= 100
-  const isDying = !image.isSurvivor && image.hoursLeft > 0 && image.hoursLeft <= 6
+  const survivalProgress = Math.min((likeCount / effectiveLikesNeeded) * 100, 100)
+  const isSafe = image.isSurvivor || (hasLiveRanking ? Boolean(image.willSurvive) : survivalProgress >= 100)
+  const isDying = !image.isSurvivor && !isSafe && image.hoursLeft > 0 && image.hoursLeft <= 6
   const resetTime = superlikeResetTime()
 
   return (
@@ -181,7 +183,9 @@ export function ImageModal({ image, onClose }: ImageModalProps) {
                       {isDying ? "Muriendo" : "Luchando"} -- {image.hoursLeft}h restantes
                     </span>
                     <span className="text-[10px] font-mono text-foreground/40">
-                      {likeCount.toLocaleString()} / {image.likesNeeded.toLocaleString()}
+                      {hasLiveRanking
+                        ? `#${image.rankToday} / corte #${image.cutoffPosition}`
+                        : `${likeCount.toLocaleString()} / ${effectiveLikesNeeded.toLocaleString()}`}
                     </span>
                   </div>
                   <div className="h-1 w-full bg-foreground/10 rounded-full overflow-hidden">
@@ -387,7 +391,9 @@ export function ImageModal({ image, onClose }: ImageModalProps) {
                     ? `Legendaria. ${superlikeCount} superlikes la consagraron.`
                     : image.isSurvivor
                       ? "Supero las 24h. Vive para siempre en SCROLLEVER."
-                      : `Necesita ${image.likesNeeded.toLocaleString()} likes en 24h para sobrevivir.`
+                      : hasLiveRanking
+                        ? `Posicion actual #${image.rankToday} con corte en #${image.cutoffPosition}.`
+                        : `Necesita ${effectiveLikesNeeded.toLocaleString()} likes en 24h para sobrevivir.`
                   }
                 </p>
 
@@ -396,7 +402,7 @@ export function ImageModal({ image, onClose }: ImageModalProps) {
                   <div className="mt-3">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-[10px] font-mono text-foreground/50">
-                        {likeCount.toLocaleString()} / {image.likesNeeded.toLocaleString()}
+                        {likeCount.toLocaleString()} / {effectiveLikesNeeded.toLocaleString()}
                       </span>
                       <span className={`text-[10px] font-mono font-bold ${
                         isSafe ? "text-primary" : isDying ? "text-red-400" : "text-foreground/50"
@@ -527,4 +533,3 @@ export function ImageModal({ image, onClose }: ImageModalProps) {
     </div>
   )
 }
-
